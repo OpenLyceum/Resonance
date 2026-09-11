@@ -68,7 +68,7 @@ export class StringManager {
   /**
    * Accessibility (Interactive Description) StringProperties: screen-summary
    * regions, the live current-details template, and per-control names/help text.
-   * See the shared OpenPhysics ACCESSIBILITY.md convention.
+   * See the shared OpenLyceum ACCESSIBILITY.md convention.
    */
   public getA11yStrings() {
     return stringProperties.resonance.a11y;

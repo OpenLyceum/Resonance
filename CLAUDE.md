@@ -1,6 +1,6 @@
 # CLAUDE.md — Resonance
 
-Sim-specific context for AI assistants. General SceneryStack guidance: [OpenPhysics/.github/CLAUDE.md](https://github.com/OpenPhysics/.github/blob/main/CLAUDE.md).
+Sim-specific context for AI assistants. General SceneryStack guidance: [OpenLyceum/.github/CLAUDE.md](https://github.com/OpenLyceum/.github/blob/main/CLAUDE.md).
 
 ## Project
 
@@ -43,7 +43,7 @@ First three screens share `BaseOscillatorScreenModel` / `BaseOscillatorScreenVie
 
 ## Accessibility
 
-Follows the shared [OpenPhysics accessibility convention](https://github.com/OpenPhysics/Baton/blob/main/ACCESSIBILITY.md).
+Follows the shared [OpenLyceum accessibility convention](https://github.com/OpenLyceum/Baton/blob/main/ACCESSIBILITY.md).
 `BaseOscillatorScreenView` registers `OscillatorScreenSummaryContent` (shared by the three
 oscillator screens); `ChladniScreenView` registers `ChladniScreenSummaryContent`. Both set explicit
 `pdomOrder` and live current-details derived from the model. Per-control `accessibleName` /

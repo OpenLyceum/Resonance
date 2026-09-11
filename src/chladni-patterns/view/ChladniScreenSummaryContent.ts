@@ -6,7 +6,7 @@
  * interaction hint, and exposes a LIVE "current details" paragraph derived from
  * the model (driving frequency and the number of grains on the nodal lines).
  *
- * Follows the OpenPhysics accessibility convention; see the canonical
+ * Follows the OpenLyceum accessibility convention; see the canonical
  * SceneryStackTemplate/SimScreenSummaryContent.ts.
  */
 import { DerivedProperty } from "scenerystack/axon";

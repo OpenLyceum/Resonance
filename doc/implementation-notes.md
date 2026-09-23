@@ -44,7 +44,7 @@ Data flows Model → View through AXON `Property` objects. Model +y is up; views
   guard to prevent feedback loops.
 - **Shared driver, per-resonator m/k.** `BaseOscillatorScreenModel` distributes natural frequencies
   1.0–5.5 Hz across N oscillators per configuration mode.
-- **Chladni exceptions (documented in CLAUDE.md).**
+- **Chladni exceptions (documented in AGENTS.md).**
   - `ResonanceSonification.ts`: raw `setTimeout` after Web Audio gain fade (wall-clock, not sim time).
   - `ResonanceCurveCalculator.ts`: progressive precompute via `requestAnimationFrame` with version
     guard — background cache only, never partial reads in physics.
@@ -87,4 +87,4 @@ add locale keys and summary content. See `doc/multi-screen.md`.
 ## Related docs
 
 - [model.md](./model.md) — educator physics guide
-- [CLAUDE.md](../CLAUDE.md) — sim-specific AI context and pitfall list
+- [AGENTS.md](../AGENTS.md) — sim-specific AI context and pitfall list

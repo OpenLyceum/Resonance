@@ -52,7 +52,6 @@
     "@vitest/coverage-v8": "^5.0.1",
     "canvas": "^3.2.3",
     "happy-dom": "^20.14.5",
-    "playwright": "^1.62.1",
     "png-to-ico": "^3.0.2",
     "sharp": "^0.35.4",
     "tsx": "^4.23.15",

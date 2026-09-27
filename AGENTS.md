@@ -56,7 +56,7 @@ via `StringManager.getA11yStrings()`.
 - **Hardcoded colors:** near-invisible `rgba(0,0,0,0.01)` hit-target fill in `ChladniScreenView.ts`
   (interaction surface, not themed chrome).
 - **Domain clock:** `BaseModel` / Chladni playback state machines own play/pause and stepping instead of composing fleet-standard `TimeModel` (`src/common/TimeModel.ts` is present for shared reference only).
-- **Vitest environment:** `jsdom` (not the fleet-default `happy-dom`) — canvas/DOM-heavy model tests need it; `tests/setup.ts` + `execArgv: ["--expose-gc"]` are otherwise fleet-standard.
+- **Template drift (Baton `check-template-drift.sh`):** `biome.json` turns off `noNonNullAssertion` (below).
 - **Biome `style.noNonNullAssertion: off`:** Chladni WebGL/canvas particle paths use intentional
   non-null assertions; enabling the rule floods lint without improving safety here.
 
@@ -76,7 +76,7 @@ open PRs that fight the overrides. Revisit when SceneryStack drops or re-pins th
 
 ## Testing
 
-Fleet-standard Vitest layout (`jsdom`, `tests/setup.ts`, `execArgv: ["--expose-gc"]`):
+Fleet-standard Vitest layout (`happy-dom`, `tests/setup.ts`, `execArgv: ["--expose-gc"]`):
 
 | Path | Purpose |
 |---|---|
@@ -105,7 +105,7 @@ runs the suite when a `test` script is present.
 npm run lint && npm run check && npm run build && npm test
 ```
 
-`npm run release` intentionally skips `npm test` in some sims — append `&& npm test` before the version bump so a release cannot ship a failing suite.
+`npm run release` runs `npm test` before the version bump, and `src/init.ts` reads `version` from `package.json`, so the About dialog always matches the release.
 
 | Command | Description |
 |---|---|

@@ -1,28 +1,33 @@
-/** biome-ignore-all lint/suspicious/noConsole: fuzz harness progress and diagnostic output */
 /**
- * Automated fuzz testing for the Resonance simulation.
+ * Optional Playwright fuzz smoke — template-owned, identical across the fleet.
  *
- * This test launches the simulation with fuzz parameters and monitors the console
- * for errors. It supports configurable duration, fuzz rate, and reproducible seeds.
+ * Two runs, each for FUZZ_DURATION seconds:
+ *  - pointer fuzz (`?fuzz`): random mouse/touch input on the display
+ *  - keyboard fuzz (`?fuzzBoard`): random keyboard input through the parallel DOM,
+ *    which the pointer fuzz never touches (e.g. a CSP that blocks Scenery's inline
+ *    `onclick` handlers only shows up here)
+ *
+ * Both carry `?ea`: without it assertions are silent and the test cannot fail on an
+ * invalid internal state. Sim-specific Playwright tests go in their own
+ * tests/fuzz/*.spec.ts files, not in this one.
  *
  * Usage:
- *   npm run test:fuzz                    # Run with defaults (60s, random seed)
- *   npm run test:fuzz -- --seed=12345    # Run with specific seed for reproducibility
- *   npm run test:fuzz -- --duration=300  # Run for 5 minutes
- *   npm run test:fuzz -- --headed        # Run with visible browser
- *
- * Environment variables:
- *   FUZZ_DURATION - Duration in seconds (default: 60)
- *   FUZZ_SEED - Random seed for reproducibility (default: random)
- *   FUZZ_RATE - Events per frame (default: 100)
- *   FUZZ_POINTERS - Max concurrent pointers (default: 1)
+ *   npm run test:fuzz                 # default 30s per run
+ *   npm run test:fuzz:quick           # 10s
+ *   npm run test:fuzz:long            # 300s
+ *   npm run test:fuzz -- 90           # 90s
+ *   npm run test:fuzz -- --duration 90
+ *   FUZZ_DURATION=90 npm run test:fuzz
+ *   FUZZ_SEED=12345 npm run test:fuzz
+ *   FUZZ_POINTERS=5 npm run test:fuzz # multitouch
+ *   FUZZ_PORT=5190 npm run test:fuzz  # parallel runs across sims
  */
 
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 
-// Configuration from environment or defaults
-const FUZZ_DURATION: number = parseInt(process.env["FUZZ_DURATION"] || "60", 10) * 1000;
-const FUZZ_SEED: string = process.env["FUZZ_SEED"] || Math.floor(Math.random() * 1000000).toString();
+const FUZZ_DURATION_SECONDS: number = parseInt(process.env["FUZZ_DURATION"] || "30", 10);
+const FUZZ_DURATION: number = FUZZ_DURATION_SECONDS * 1000;
+const FUZZ_SEED: string = process.env["FUZZ_SEED"] || Math.floor(Math.random() * 1_000_000).toString();
 const FUZZ_RATE: string = process.env["FUZZ_RATE"] || "100";
 const FUZZ_POINTERS: string = process.env["FUZZ_POINTERS"] || "1";
 
@@ -33,292 +38,75 @@ interface ConsoleMessage {
   timestamp: number;
 }
 
-interface FuzzResult {
-  seed: string;
-  duration: number;
-  errors: ConsoleMessage[];
-  warnings: ConsoleMessage[];
-  assertions: ConsoleMessage[];
-}
+const FUZZ_MODES: readonly { readonly name: string; readonly query: string }[] = [
+  { name: "pointer fuzz", query: `fuzz&fuzzRate=${FUZZ_RATE}&fuzzPointers=${FUZZ_POINTERS}` },
+  { name: "keyboard fuzz", query: "fuzzBoard" },
+];
 
 test.describe("Fuzz Testing", () => {
-  test("should run without console errors", async ({ page }) => {
-    const errors: ConsoleMessage[] = [];
-    const warnings: ConsoleMessage[] = [];
-    const assertions: ConsoleMessage[] = [];
-    const startTime = Date.now();
-
-    // Build the fuzz URL
-    const fuzzUrl = `/?fuzz&ea&randomSeed=${FUZZ_SEED}&fuzzRate=${FUZZ_RATE}&fuzzPointers=${FUZZ_POINTERS}`;
-
-    console.log("\n========================================");
-    console.log("FUZZ TEST CONFIGURATION");
-    console.log("========================================");
-    console.log(`Seed: ${FUZZ_SEED}`);
-    console.log(`Duration: ${FUZZ_DURATION / 1000}s`);
-    console.log(`Fuzz Rate: ${FUZZ_RATE} events/frame`);
-    console.log(`Max Pointers: ${FUZZ_POINTERS}`);
-    console.log(`URL: ${fuzzUrl}`);
-    console.log("========================================\n");
-
-    // Listen for console messages
-    page.on("console", (msg) => {
-      const type = msg.type();
-      const text = msg.text();
-      const location = msg.location();
-      const timestamp = Date.now() - startTime;
-
-      const message: ConsoleMessage = {
-        type,
-        text,
-        location: `${location.url}:${location.lineNumber}:${location.columnNumber}`,
-        timestamp,
-      };
-
-      if (type === "error") {
-        errors.push(message);
-        console.log(`[${(timestamp / 1000).toFixed(1)}s] ERROR: ${text}`);
-      } else if (type === "warning") {
-        warnings.push(message);
-      } else if (text.includes("Assertion failed") || text.includes("AssertionError")) {
-        assertions.push(message);
-        console.log(`[${(timestamp / 1000).toFixed(1)}s] ASSERTION: ${text}`);
-      }
+  for (const mode of FUZZ_MODES) {
+    test(`${mode.name} should run without console errors`, async ({ page }) => {
+      test.setTimeout(FUZZ_DURATION + 120_000);
+      await runFuzz(page, `/?${mode.query}&ea&randomSeed=${FUZZ_SEED}`);
     });
-
-    // Listen for page errors (uncaught exceptions)
-    page.on("pageerror", (error) => {
-      const timestamp = Date.now() - startTime;
-      errors.push({
-        type: "pageerror",
-        text: error.message,
-        location: error.stack || "unknown",
-        timestamp,
-      });
-      console.log(`[${(timestamp / 1000).toFixed(1)}s] PAGE ERROR: ${error.message}`);
-    });
-
-    // Navigate to the fuzz URL
-    await page.goto(fuzzUrl);
-
-    // Wait for the simulation to initialize
-    await page.waitForSelector("#sim", { timeout: 30000 });
-
-    console.log("Simulation loaded. Fuzzing in progress...\n");
-
-    // Let the fuzz test run for the specified duration
-    // Check periodically for fatal errors that might stop the sim
-    const checkInterval = 5000; // Check every 5 seconds
-    let elapsed = 0;
-
-    while (elapsed < FUZZ_DURATION) {
-      const waitTime = Math.min(checkInterval, FUZZ_DURATION - elapsed);
-      await page.waitForTimeout(waitTime);
-      elapsed += waitTime;
-
-      // Progress indicator
-      const progress = ((elapsed / FUZZ_DURATION) * 100).toFixed(0);
-      process.stdout.write(
-        `\rProgress: ${progress}% (${(elapsed / 1000).toFixed(0)}s / ${(FUZZ_DURATION / 1000).toFixed(0)}s)`,
-      );
-
-      // Check if the page is still responsive
-      try {
-        await page.evaluate(() => window.document.hasFocus);
-      } catch {
-        console.log("\nPage became unresponsive!");
-        break;
-      }
-    }
-
-    console.log("\n");
-
-    // Generate the result report
-    const result: FuzzResult = {
-      seed: FUZZ_SEED,
-      duration: elapsed,
-      errors,
-      warnings,
-      assertions,
-    };
-
-    // Print summary
-    console.log("========================================");
-    console.log("FUZZ TEST RESULTS");
-    console.log("========================================");
-    console.log(`Seed: ${result.seed}`);
-    console.log(`Duration: ${(result.duration / 1000).toFixed(1)}s`);
-    console.log(`Errors: ${result.errors.length}`);
-    console.log(`Warnings: ${result.warnings.length}`);
-    console.log(`Assertions: ${result.assertions.length}`);
-
-    if (result.errors.length > 0) {
-      console.log("\nERRORS:");
-      for (const [i, err] of result.errors.entries()) {
-        console.log(`  ${i + 1}. [${(err.timestamp / 1000).toFixed(1)}s] ${err.text}`);
-        console.log(`     Location: ${err.location}`);
-      }
-    }
-
-    if (result.assertions.length > 0) {
-      console.log("\nASSERTIONS:");
-      for (const [i, a] of result.assertions.entries()) {
-        console.log(`  ${i + 1}. [${(a.timestamp / 1000).toFixed(1)}s] ${a.text}`);
-      }
-    }
-
-    console.log("========================================");
-    console.log(`\nTo reproduce: FUZZ_SEED=${FUZZ_SEED} npm run test:fuzz`);
-    console.log(`Or visit: http://localhost:5173${fuzzUrl}`);
-    console.log("========================================\n");
-
-    // Fail the test if there were errors or assertions
-    expect(result.errors.length, `Found ${result.errors.length} console errors`).toBe(0);
-    expect(result.assertions.length, `Found ${result.assertions.length} assertion failures`).toBe(0);
-  });
-
-  test("should handle rapid configuration changes", async ({ page }) => {
-    // This test rapidly changes resonator count and configuration
-    // to stress test the rebuild/cleanup logic
-    const errors: ConsoleMessage[] = [];
-    const startTime = Date.now();
-
-    console.log("\n========================================");
-    console.log("CONFIGURATION STRESS TEST");
-    console.log("========================================\n");
-
-    page.on("console", (msg) => {
-      if (msg.type() === "error") {
-        const timestamp = Date.now() - startTime;
-        errors.push({
-          type: msg.type(),
-          text: msg.text(),
-          location: `${msg.location().url}:${msg.location().lineNumber}`,
-          timestamp,
-        });
-        console.log(`ERROR: ${msg.text()}`);
-      }
-    });
-
-    page.on("pageerror", (error) => {
-      errors.push({
-        type: "pageerror",
-        text: error.message,
-        location: error.stack || "unknown",
-        timestamp: Date.now() - startTime,
-      });
-      console.log(`PAGE ERROR: ${error.message}`);
-    });
-
-    // Load without fuzzing so we can control interactions
-    await page.goto("/");
-    await page.waitForSelector("#sim", { timeout: 30000 });
-
-    // Wait for simulation to be fully loaded
-    await page.waitForTimeout(2000);
-
-    console.log("Simulation loaded. Running configuration stress test...\n");
-
-    // Perform rapid configuration changes for 30 seconds
-    const testDuration = 30000;
-    const changeInterval = 500; // Change every 500ms
-    let elapsed = 0;
-
-    while (elapsed < testDuration) {
-      try {
-        // Try to find and interact with controls
-        // These selectors may need adjustment based on actual DOM structure
-
-        // Random click somewhere in the sim area to trigger interactions
-        const simElement = await page.$("#sim");
-        if (simElement) {
-          const box = await simElement.boundingBox();
-          if (box) {
-            const x = box.x + Math.random() * box.width;
-            const y = box.y + Math.random() * box.height;
-            await page.mouse.click(x, y);
-          }
-        }
-      } catch {
-        // Ignore interaction errors, we're stress testing
-      }
-
-      await page.waitForTimeout(changeInterval);
-      elapsed += changeInterval;
-
-      const progress = ((elapsed / testDuration) * 100).toFixed(0);
-      process.stdout.write(`\rProgress: ${progress}%`);
-    }
-
-    console.log("\n\nConfiguration stress test complete.");
-    console.log(`Errors found: ${errors.length}`);
-
-    if (errors.length > 0) {
-      console.log("\nErrors:");
-      for (const [i, err] of errors.entries()) {
-        console.log(`  ${i + 1}. ${err.text}`);
-      }
-    }
-
-    expect(errors.length, `Found ${errors.length} errors during stress test`).toBe(0);
-  });
-
-  test("should run multitouch fuzz test", async ({ page }) => {
-    const errors: ConsoleMessage[] = [];
-    const startTime = Date.now();
-    const duration = parseInt(process.env["FUZZ_DURATION"] || "30", 10) * 1000;
-
-    const fuzzUrl = `/?fuzz&ea&randomSeed=${FUZZ_SEED}&fuzzRate=50&fuzzPointers=5`;
-
-    console.log("\n========================================");
-    console.log("MULTITOUCH FUZZ TEST");
-    console.log("========================================");
-    console.log(`Seed: ${FUZZ_SEED}`);
-    console.log(`Max Pointers: 5`);
-    console.log("========================================\n");
-
-    page.on("console", (msg) => {
-      if (msg.type() === "error") {
-        const timestamp = Date.now() - startTime;
-        errors.push({
-          type: msg.type(),
-          text: msg.text(),
-          location: `${msg.location().url}:${msg.location().lineNumber}`,
-          timestamp,
-        });
-        console.log(`[${(timestamp / 1000).toFixed(1)}s] ERROR: ${msg.text()}`);
-      }
-    });
-
-    page.on("pageerror", (error) => {
-      errors.push({
-        type: "pageerror",
-        text: error.message,
-        location: error.stack || "unknown",
-        timestamp: Date.now() - startTime,
-      });
-    });
-
-    await page.goto(fuzzUrl);
-    await page.waitForSelector("#sim", { timeout: 30000 });
-
-    console.log("Running multitouch fuzz test...\n");
-
-    let elapsed = 0;
-    const checkInterval = 5000;
-
-    while (elapsed < duration) {
-      const waitTime = Math.min(checkInterval, duration - elapsed);
-      await page.waitForTimeout(waitTime);
-      elapsed += waitTime;
-
-      const progress = ((elapsed / duration) * 100).toFixed(0);
-      process.stdout.write(`\rProgress: ${progress}%`);
-    }
-
-    console.log("\n\nMultitouch fuzz test complete.");
-    console.log(`Errors found: ${errors.length}`);
-
-    expect(errors.length, `Found ${errors.length} errors in multitouch test`).toBe(0);
-  });
+  }
 });
+
+async function runFuzz(page: Page, fuzzUrl: string): Promise<void> {
+  const errors: ConsoleMessage[] = [];
+  const assertions: ConsoleMessage[] = [];
+  const startTime = Date.now();
+
+  page.on("console", (msg) => {
+    const type = msg.type();
+    const text = msg.text();
+    const location = msg.location();
+    const timestamp = Date.now() - startTime;
+    const message: ConsoleMessage = {
+      type,
+      text,
+      location: `${location.url}:${location.lineNumber}:${location.columnNumber}`,
+      timestamp,
+    };
+    if (type === "error") {
+      errors.push(message);
+    } else if (text.includes("Assertion failed") || text.includes("AssertionError")) {
+      assertions.push(message);
+    }
+  });
+
+  page.on("pageerror", (error) => {
+    errors.push({
+      type: "pageerror",
+      text: error.message,
+      location: error.stack || "unknown",
+      timestamp: Date.now() - startTime,
+    });
+  });
+
+  await page.goto(fuzzUrl);
+  await page.waitForSelector("#sim", { timeout: 30_000 });
+
+  const checkInterval = 2000;
+  let elapsed = 0;
+  while (elapsed < FUZZ_DURATION) {
+    const waitTime = Math.min(checkInterval, FUZZ_DURATION - elapsed);
+    await page.waitForTimeout(waitTime);
+    elapsed += waitTime;
+    try {
+      await page.evaluate(() => window.document.hasFocus);
+    } catch {
+      break;
+    }
+  }
+
+  // Report the messages themselves (not just a count) so a failure is readable in CI.
+  expect(
+    errors.map((e) => e.text),
+    `Found ${errors.length} console errors (seed ${FUZZ_SEED}, ${fuzzUrl})`,
+  ).toEqual([]);
+  expect(
+    assertions.map((a) => a.text),
+    `Found ${assertions.length} assertion failures (seed ${FUZZ_SEED}, ${fuzzUrl})`,
+  ).toEqual([]);
+}

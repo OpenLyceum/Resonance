@@ -1,304 +1,196 @@
 /**
- * Vitest setup file
- * Configures canvas and Web Audio API support for jsdom environment
+ * Vitest setup file — runs before every test file.
+ *
+ * SceneryStack requires a Canvas 2D context and an AudioContext at import time.
+ * happy-dom does not provide working versions, so we patch in minimal mocks
+ * before any scenerystack code loads, then call init() once for the suite.
+ *
+ * Template-owned: identical across the fleet except the `name` passed to init()
+ * (Baton check-template-drift substitutes it). Extend mocks in the template, or
+ * record a sim-specific variant under AGENTS.md → "Compliance carve-outs".
  */
 
-import { vi } from "vitest";
-
-// Mock global phet object with version for scenerystack/joist
-global.phet = {
-  chipper: {
-    packageObject: {
-      version: "1.0.0",
-    },
-    buildTimestamp: "2024-01-01 00:00:00 UTC",
-  },
+// ── shared no-op helpers ─────────────────────────────────────────────────────
+const noop: () => void = () => {
+  /* no-op */
 };
+const noopReturn: (val: unknown) => () => unknown = (val: unknown) => (): unknown => val;
 
-// Mock AudioParam for Web Audio API
-function createMockAudioParam(initialValue = 0) {
-  return {
-    value: initialValue,
-    defaultValue: initialValue,
-    minValue: -3.4028235e38,
-    maxValue: 3.4028235e38,
-    setValueAtTime: vi.fn().mockReturnThis(),
-    linearRampToValueAtTime: vi.fn().mockReturnThis(),
-    exponentialRampToValueAtTime: vi.fn().mockReturnThis(),
-    setTargetAtTime: vi.fn().mockReturnThis(),
-    setValueCurveAtTime: vi.fn().mockReturnThis(),
-    cancelScheduledValues: vi.fn().mockReturnThis(),
-    cancelAndHoldAtTime: vi.fn().mockReturnThis(),
+// ── Canvas 2D mock ───────────────────────────────────────────────────────────
+function createMockContext2D(): CanvasRenderingContext2D {
+  const ctx: Record<string, unknown> = {
+    canvas: { width: 1, height: 1 },
+    save: noop,
+    restore: noop,
+    scale: noop,
+    rotate: noop,
+    translate: noop,
+    transform: noop,
+    setTransform: noop,
+    getTransform: noopReturn({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 }),
+    resetTransform: noop,
+    globalAlpha: 1,
+    globalCompositeOperation: "source-over",
+    fillStyle: "#000",
+    strokeStyle: "#000",
+    lineWidth: 1,
+    lineCap: "butt",
+    lineJoin: "miter",
+    miterLimit: 10,
+    lineDashOffset: 0,
+    font: "10px sans-serif",
+    textAlign: "start",
+    textBaseline: "alphabetic",
+    direction: "ltr",
+    shadowBlur: 0,
+    shadowColor: "rgba(0,0,0,0)",
+    shadowOffsetX: 0,
+    shadowOffsetY: 0,
+    imageSmoothingEnabled: true,
+    clearRect: noop,
+    fillRect: noop,
+    strokeRect: noop,
+    fillText: noop,
+    strokeText: noop,
+    measureText: () => ({
+      width: 0,
+      actualBoundingBoxAscent: 0,
+      actualBoundingBoxDescent: 0,
+      fontBoundingBoxAscent: 0,
+      fontBoundingBoxDescent: 0,
+      actualBoundingBoxLeft: 0,
+      actualBoundingBoxRight: 0,
+      emHeightAscent: 0,
+      emHeightDescent: 0,
+    }),
+    beginPath: noop,
+    closePath: noop,
+    moveTo: noop,
+    lineTo: noop,
+    bezierCurveTo: noop,
+    quadraticCurveTo: noop,
+    arc: noop,
+    arcTo: noop,
+    ellipse: noop,
+    rect: noop,
+    fill: noop,
+    stroke: noop,
+    clip: noop,
+    isPointInPath: noopReturn(false),
+    isPointInStroke: noopReturn(false),
+    getLineDash: noopReturn([]),
+    setLineDash: noop,
+    createLinearGradient: () => ({ addColorStop: noop }),
+    createRadialGradient: () => ({ addColorStop: noop }),
+    createPattern: noopReturn(null),
+    createImageData: (w: number, h: number) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }),
+    getImageData: (_x: number, _y: number, w: number, h: number) => ({
+      width: w,
+      height: h,
+      data: new Uint8ClampedArray(w * h * 4),
+    }),
+    putImageData: noop,
+    drawImage: noop,
   };
+  return ctx as unknown as CanvasRenderingContext2D;
 }
 
-// Mock Web Audio API
+// ── Web Audio mock ───────────────────────────────────────────────────────────
 class MockAudioContext {
-  destination = {
-    channelCount: 2,
-    channelCountMode: "explicit",
-    channelInterpretation: "speakers",
-    maxChannelCount: 2,
-    numberOfInputs: 1,
-    numberOfOutputs: 0,
-  };
-  sampleRate = 44100;
-  currentTime = 0;
-  state = "running";
-  listener = {
-    positionX: createMockAudioParam(),
-    positionY: createMockAudioParam(),
-    positionZ: createMockAudioParam(),
-    forwardX: createMockAudioParam(),
-    forwardY: createMockAudioParam(),
-    forwardZ: createMockAudioParam(-1),
-    upX: createMockAudioParam(),
-    upY: createMockAudioParam(1),
-    upZ: createMockAudioParam(),
-  };
-
-  createGain() {
+  readonly sampleRate = 44100;
+  readonly state: AudioContextState = "running";
+  readonly destination = {} as AudioDestinationNode;
+  createGain(): GainNode {
     return {
-      gain: createMockAudioParam(1),
-      connect: vi.fn().mockReturnThis(),
-      disconnect: vi.fn(),
-      context: this,
-      numberOfInputs: 1,
-      numberOfOutputs: 1,
-      channelCount: 2,
-      channelCountMode: "max",
-      channelInterpretation: "speakers",
-    };
+      gain: { value: 1, setValueAtTime: noop, linearRampToValueAtTime: noop },
+      connect: noop,
+      disconnect: noop,
+    } as unknown as GainNode;
   }
-
-  createOscillator() {
-    return {
-      type: "sine",
-      frequency: createMockAudioParam(440),
-      detune: createMockAudioParam(0),
-      connect: vi.fn().mockReturnThis(),
-      disconnect: vi.fn(),
-      start: vi.fn(),
-      stop: vi.fn(),
-      context: this,
-      numberOfInputs: 0,
-      numberOfOutputs: 1,
-    };
-  }
-
-  createBufferSource() {
+  createBufferSource(): AudioBufferSourceNode {
     return {
       buffer: null,
-      loop: false,
-      loopStart: 0,
-      loopEnd: 0,
-      playbackRate: createMockAudioParam(1),
-      detune: createMockAudioParam(0),
-      connect: vi.fn().mockReturnThis(),
-      disconnect: vi.fn(),
-      start: vi.fn(),
-      stop: vi.fn(),
-      context: this,
-      numberOfInputs: 0,
-      numberOfOutputs: 1,
-    };
+      connect: noop,
+      disconnect: noop,
+      start: noop,
+      stop: noop,
+      playbackRate: { value: 1 },
+    } as unknown as AudioBufferSourceNode;
   }
-
-  createDynamicsCompressor() {
-    return {
-      threshold: createMockAudioParam(-24),
-      knee: createMockAudioParam(30),
-      ratio: createMockAudioParam(12),
-      attack: createMockAudioParam(0.003),
-      release: createMockAudioParam(0.25),
-      reduction: 0,
-      connect: vi.fn().mockReturnThis(),
-      disconnect: vi.fn(),
-      context: this,
-    };
+  createOscillator(): OscillatorNode {
+    return { connect: noop, start: noop, stop: noop, frequency: { value: 440 } } as unknown as OscillatorNode;
   }
-
-  createConvolver() {
-    return {
-      buffer: null,
-      normalize: true,
-      connect: vi.fn().mockReturnThis(),
-      disconnect: vi.fn(),
-      context: this,
-    };
+  createDynamicsCompressor(): DynamicsCompressorNode {
+    return { connect: noop, disconnect: noop } as unknown as DynamicsCompressorNode;
   }
-
-  createBiquadFilter() {
-    return {
-      type: "lowpass",
-      frequency: createMockAudioParam(350),
-      detune: createMockAudioParam(0),
-      Q: createMockAudioParam(1),
-      gain: createMockAudioParam(0),
-      connect: vi.fn().mockReturnThis(),
-      disconnect: vi.fn(),
-      context: this,
-    };
+  decodeAudioData(_data: ArrayBuffer): Promise<AudioBuffer> {
+    return Promise.resolve({
+      length: 0,
+      duration: 0,
+      sampleRate: 44100,
+      numberOfChannels: 1,
+      getChannelData: () => new Float32Array(0),
+    } as unknown as AudioBuffer);
   }
-
-  createBuffer(channels: number, length: number, sampleRate: number) {
-    return {
-      numberOfChannels: channels,
-      length,
-      sampleRate,
-      duration: length / sampleRate,
-      getChannelData: () => new Float32Array(length),
-      copyFromChannel: vi.fn(),
-      copyToChannel: vi.fn(),
-    };
-  }
-
-  decodeAudioData(_audioData: ArrayBuffer): Promise<AudioBuffer> {
-    return Promise.resolve(this.createBuffer(2, 44100, 44100) as unknown as AudioBuffer);
-  }
-
-  resume() {
+  close(): Promise<void> {
     return Promise.resolve();
   }
-
-  suspend() {
-    return Promise.resolve();
-  }
-
-  close() {
+  resume(): Promise<void> {
     return Promise.resolve();
   }
 }
+(globalThis as Record<string, unknown>)["AudioContext"] = MockAudioContext;
+(globalThis as Record<string, unknown>)["webkitAudioContext"] = MockAudioContext;
 
-// @ts-expect-error - Mock implementation
-global.AudioContext = MockAudioContext;
-// @ts-expect-error - Mock implementation
-global.webkitAudioContext = MockAudioContext;
+// ── Web Worker mock ──────────────────────────────────────────────────────────
+// happy-dom has no Worker. Models that construct one as a field initializer
+// (e.g. an OpenCV or physics worker) still need the constructor to exist.
+// Messages are swallowed: a real worker cannot run under happy-dom anyway.
+class MockWorker {
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: ((event: ErrorEvent) => void) | null = null;
+  postMessage: () => void = noop;
+  terminate: () => void = noop;
+  addEventListener: () => void = noop;
+  removeEventListener: () => void = noop;
+  dispatchEvent: () => boolean = () => false;
+}
+if (typeof globalThis.Worker === "undefined") {
+  (globalThis as Record<string, unknown>)["Worker"] = MockWorker;
+}
 
-// Mock HTMLCanvasElement.getContext to use node-canvas
-const originalGetContext = HTMLCanvasElement.prototype.getContext;
-
-HTMLCanvasElement.prototype.getContext = function (
-  this: HTMLCanvasElement,
-  contextId: string,
-  options?: CanvasRenderingContext2DSettings,
-): RenderingContext | null {
+// ── patch getContext("2d") before any scenerystack import ────────────────────
+// Also pins getContext("webgpu") to null: happy-dom has no WebGPU, so code with a
+// WebGPU path exercises its unsupported branch deterministically.
+//
+// `origGetContext` is narrowed to a single loose signature before delegating —
+// its real type is a large overload union (widened further by @webgpu/types),
+// and a spread argument cannot be applied to an overload union.
+type LooseGetContext = (this: HTMLCanvasElement, contextId: string, ...args: unknown[]) => unknown;
+const origGetContext = HTMLCanvasElement.prototype.getContext as unknown as LooseGetContext;
+HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, contextId: string, ...args: unknown[]) {
   if (contextId === "2d") {
-    try {
-      // Try to use node-canvas (lazy require so the dependency stays optional)
-      // biome-ignore lint/style/noCommonJs: optional canvas dependency is loaded lazily in the test setup
-      const { createCanvas } = require("canvas");
-      const canvas = createCanvas(this.width || 300, this.height || 150);
-      return canvas.getContext("2d");
-    } catch {
-      // Fallback to mock if canvas is not available
-      return {
-        canvas: this,
-        fillRect: vi.fn(),
-        clearRect: vi.fn(),
-        getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4) })),
-        putImageData: vi.fn(),
-        drawImage: vi.fn(),
-        save: vi.fn(),
-        restore: vi.fn(),
-        scale: vi.fn(),
-        rotate: vi.fn(),
-        translate: vi.fn(),
-        transform: vi.fn(),
-        setTransform: vi.fn(),
-        createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-        createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-        createPattern: vi.fn(),
-        beginPath: vi.fn(),
-        closePath: vi.fn(),
-        moveTo: vi.fn(),
-        lineTo: vi.fn(),
-        bezierCurveTo: vi.fn(),
-        quadraticCurveTo: vi.fn(),
-        arc: vi.fn(),
-        arcTo: vi.fn(),
-        ellipse: vi.fn(),
-        rect: vi.fn(),
-        fill: vi.fn(),
-        stroke: vi.fn(),
-        clip: vi.fn(),
-        isPointInPath: vi.fn(),
-        measureText: vi.fn(() => ({ width: 0 })),
-        fillText: vi.fn(),
-        strokeText: vi.fn(),
-        setLineDash: vi.fn(),
-        getLineDash: vi.fn(() => []),
-      } as unknown as CanvasRenderingContext2D;
-    }
+    const ctx = createMockContext2D();
+    (ctx as unknown as Record<string, unknown>)["canvas"] = this;
+    return ctx;
   }
-  return originalGetContext.call(this, contextId, options);
-} as typeof originalGetContext;
-
-// Mock SVG getBBox and other SVG-related methods
-const mockBBox = {
-  x: 0,
-  y: 0,
-  width: 100,
-  height: 20,
-};
-
-// Add getBBox to SVGElement prototype
-if (typeof SVGElement !== "undefined") {
-  // @ts-expect-error - Adding mock method
-  SVGElement.prototype.getBBox = () => ({ ...mockBBox });
-
-  // @ts-expect-error - Adding mock method
-  SVGElement.prototype.getComputedTextLength = () => 100;
-
-  // @ts-expect-error - Adding mock method
-  SVGElement.prototype.getSubStringLength = () => 10;
-}
-
-// Mock createElementNS for SVG elements
-const originalCreateElementNS = document.createElementNS;
-document.createElementNS = ((namespaceURI: string | null, qualifiedName: string) => {
-  const element = originalCreateElementNS.call(document, namespaceURI, qualifiedName);
-
-  if (namespaceURI === "http://www.w3.org/2000/svg") {
-    const svg = element as unknown as Record<string, unknown>;
-    svg["getBBox"] = () => ({ ...mockBBox });
-    svg["getComputedTextLength"] = () => 100;
-    svg["getSubStringLength"] = () => 10;
+  if (contextId === "webgpu") {
+    return null;
   }
+  return origGetContext.call(this, contextId, ...args);
+} as typeof HTMLCanvasElement.prototype.getContext;
 
-  return element;
-}) as typeof originalCreateElementNS;
+// ── SceneryStack init ────────────────────────────────────────────────────────
+import { init, madeWithSceneryStackSplashDataURI } from "scenerystack/init";
 
-// Mock matchMedia
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+init({
+  // Must match the package.json "name" (and the name in src/init.ts).
+  name: "resonance",
+  version: "1.0.0-test",
+  brand: "made-with-scenerystack",
+  locale: "en",
+  availableLocales: ["en"],
+  splashDataURI: madeWithSceneryStackSplashDataURI,
+  allowLocaleSwitching: false,
+  colorProfiles: ["default"],
 });
-
-// Mock ResizeObserver
-class MockResizeObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
-
-// Mock IntersectionObserver
-class MockIntersectionObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-}
-
-// @ts-expect-error - Mock implementation
-global.IntersectionObserver = MockIntersectionObserver;

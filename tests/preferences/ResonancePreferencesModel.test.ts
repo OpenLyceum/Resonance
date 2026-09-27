@@ -29,11 +29,11 @@ describe("ResonancePreferencesModel", () => {
     mockStorage = {};
 
     // Spy on localStorage methods
-    getItemSpy = vi.spyOn(Storage.prototype, "getItem").mockImplementation((key: string) => {
+    getItemSpy = vi.spyOn(localStorage, "getItem").mockImplementation((key: string) => {
       return mockStorage[key] ?? null;
     });
 
-    setItemSpy = vi.spyOn(Storage.prototype, "setItem").mockImplementation((key: string, value: string) => {
+    setItemSpy = vi.spyOn(localStorage, "setItem").mockImplementation((key: string, value: string) => {
       mockStorage[key] = value;
     });
   });

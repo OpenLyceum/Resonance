@@ -5,6 +5,7 @@
 
 import { Range } from "scenerystack/dot";
 import { PhetFont } from "scenerystack/scenery-phet";
+import ResonanceNamespace from "./ResonanceNamespace.js";
 
 // ===== FONTS =====
 
@@ -298,5 +299,7 @@ const ResonanceConstants = {
   SUB_STEP_DECIMATION,
   GRAPH_MAX_DATA_POINTS,
 };
+
+ResonanceNamespace.register("ResonanceConstants", ResonanceConstants);
 
 export default ResonanceConstants;

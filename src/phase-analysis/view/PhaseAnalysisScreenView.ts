@@ -9,7 +9,7 @@ import {
   BaseOscillatorScreenView,
   type BaseOscillatorScreenViewOptions,
 } from "../../common/view/BaseOscillatorScreenView.js";
-import type ConfigurableGraph from "../../common/view/graph/ConfigurableGraph.js";
+import type { ConfigurableGraph } from "../../common/view/graph/ConfigurableGraph.js";
 import type { PlottableProperty } from "../../common/view/graph/PlottableProperty.js";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import type { PhaseAnalysisModel } from "../model/PhaseAnalysisModel.js";

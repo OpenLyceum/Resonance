@@ -32,7 +32,7 @@ import type { BaseOscillatorScreenModel } from "../model/BaseOscillatorScreenMod
 import { TraceDataModel } from "../model/TraceDataModel.js";
 import { FLAT_RESET_ALL_BUTTON_OPTIONS } from "../ResonanceButtonOptions.js";
 import { utteranceQueue } from "../util/utteranceQueue.js";
-import ConfigurableGraph from "./graph/ConfigurableGraph.js";
+import { ConfigurableGraph } from "./graph/ConfigurableGraph.js";
 import type { PlottableProperty } from "./graph/PlottableProperty.js";
 import { OscillatorControlPanel, type OscillatorControlPanelOptions } from "./OscillatorControlPanel.js";
 import { OscillatorDriverControlNode } from "./OscillatorDriverControlNode.js";

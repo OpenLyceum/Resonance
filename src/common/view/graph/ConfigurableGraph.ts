@@ -14,9 +14,9 @@ import ResonanceColors from "../../../ResonanceColors.js";
 import ResonanceConstants from "../../../ResonanceConstants.js";
 import ResonanceNamespace from "../../../ResonanceNamespace.js";
 import type { SubStepDataPoint } from "../../model/BaseModel.js";
-import GraphControlsPanel from "./GraphControlsPanel.js";
-import GraphDataManager from "./GraphDataManager.js";
-import GraphInteractionHandler from "./GraphInteractionHandler.js";
+import { GraphControlsPanel } from "./GraphControlsPanel.js";
+import { GraphDataManager } from "./GraphDataManager.js";
+import { GraphInteractionHandler } from "./GraphInteractionHandler.js";
 import type { PlottableProperty } from "./PlottableProperty.js";
 
 // Grid line styling
@@ -43,7 +43,7 @@ const BUTTON_FONT = new PhetFont({ size: 14, weight: "bold" });
 const BUTTON_HOVER_OPACITY = 0.8;
 const TITLE_BOTTOM_OFFSET = -5;
 
-export default class ConfigurableGraph extends Node {
+export class ConfigurableGraph extends Node {
   private readonly availableProperties: PlottableProperty[];
   private readonly xPropertyProperty: Property<PlottableProperty>;
   private readonly yPropertyProperty: Property<PlottableProperty>;

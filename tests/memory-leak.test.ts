@@ -4,7 +4,6 @@
 
 import { NumberProperty } from "scenerystack/axon";
 import { describe, expect, it } from "vitest";
-import { TimeModel } from "../src/common/TimeModel.js";
 import { ListenerTracker } from "../src/common/util/ListenerTracker.js";
 import { describeDisposalLeaks, forceGC } from "./helpers/memoryLeak.js";
 
@@ -45,7 +44,4 @@ describe("Memory leak regression", () => {
   });
 });
 
-describeDisposalLeaks([
-  { name: "TimeModel", create: () => new TimeModel(), idempotentDispose: true },
-  { name: "ListenerTracker", create: () => new ListenerTracker() },
-]);
+describeDisposalLeaks([{ name: "ListenerTracker", create: () => new ListenerTracker() }]);

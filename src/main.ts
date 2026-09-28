@@ -43,6 +43,7 @@ onReadyToLaunch(() => {
       },
       audioOptions: {
         supportsVoicing: true,
+        // Initializes tambo and the Audio preferences. Pair with supportsSound in src/init.ts.
         supportsSound: true,
       },
       inputOptions: {

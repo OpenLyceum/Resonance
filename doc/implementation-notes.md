@@ -82,7 +82,7 @@ energy behavior without drive/damping.
 ## Multi-screen pattern
 
 Oscillator screens extend base model/view; Chladni does not. Register new screens in `main.ts`;
-add locale keys and summary content. See `doc/multi-screen.md`.
+add locale keys and summary content. See [SceneryStackTemplate `doc/multi-screen.md`](https://github.com/OpenLyceum/SceneryStackTemplate/blob/main/doc/multi-screen.md).
 
 ## Related docs
 

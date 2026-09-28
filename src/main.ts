@@ -31,7 +31,7 @@ import { SingleOscillatorScreen } from "./single-oscillator/SingleOscillatorScre
 
 onReadyToLaunch(() => {
   const stringManager = StringManager.getInstance();
-  const resonancePreferences = new ResonancePreferencesModel();
+  const resonancePreferences = new ResonancePreferencesModel(Tandem.ROOT.createTandem("preferences"));
 
   const screens = [
     new SingleOscillatorScreen(resonancePreferences, {

@@ -33,36 +33,6 @@ onReadyToLaunch(() => {
   const stringManager = StringManager.getInstance();
   const resonancePreferences = new ResonancePreferencesModel();
 
-  const simOptions = {
-    webgl: true,
-    hasKeyboardHelpContent: true,
-    preferencesModel: new PreferencesModel({
-      visualOptions: {
-        supportsProjectorMode: true,
-        supportsInteractiveHighlights: true,
-      },
-      audioOptions: {
-        supportsVoicing: true,
-        // Initializes tambo and the Audio preferences. Pair with supportsSound in src/init.ts.
-        supportsSound: true,
-      },
-      inputOptions: {
-        supportsGestureControl: false,
-      },
-      localizationOptions: {
-        supportsDynamicLocale: true,
-        includeLocalePanel: true,
-      },
-      simulationOptions: {
-        customPreferences: [
-          {
-            createContent: (_tandem: Tandem) => new ResonancePreferencesNode(resonancePreferences),
-          },
-        ],
-      },
-    }),
-  };
-
   const screens = [
     new SingleOscillatorScreen(resonancePreferences, {
       tandem: Tandem.ROOT.createTandem("singleOscillatorScreen"),
@@ -78,7 +48,38 @@ onReadyToLaunch(() => {
     }),
   ];
 
-  const sim = new Sim(stringManager.getTitleStringProperty(), screens, simOptions);
+  const sim = new Sim(stringManager.getTitleStringProperty(), screens, {
+    preferencesModel: new PreferencesModel({
+      visualOptions: {
+        // Adds a "Projector Mode" toggle in Preferences → Visual
+        supportsProjectorMode: true,
+        // Enables keyboard-navigation highlight outlines
+        supportsInteractiveHighlights: true,
+      },
+      simulationOptions: {
+        customPreferences: [
+          {
+            createContent: (_tandem: Tandem) => new ResonancePreferencesNode(resonancePreferences),
+          },
+        ],
+      },
+      localizationOptions: {
+        // Adds a language picker in Preferences → Language
+        supportsDynamicLocale: true,
+        includeLocalePanel: true,
+      },
+      audioOptions: {
+        // Initializes tambo and the Audio preferences. Pair with supportsSound in src/init.ts.
+        supportsSound: true,
+        supportsVoicing: true,
+      },
+      inputOptions: {
+        supportsGestureControl: false,
+      },
+    }),
+    webgl: true,
+    hasKeyboardHelpContent: true,
+  });
 
   sim.start();
 });

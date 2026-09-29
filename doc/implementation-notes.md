@@ -9,6 +9,8 @@ Resonance is a four-screen SceneryStack simulation. The first three screens shar
 infrastructure; Chladni is a separate model/view stack.
 
 ```
+src/ResonanceConstants.ts         physics ranges, layout, sweep rate
+
 main.ts
   ├─ SingleOscillatorScreen      BaseOscillatorScreenModel + BaseOscillatorScreenView
   ├─ MultipleOscillatorsScreen
@@ -20,8 +22,7 @@ src/common/model/
   ├─ ResonanceModel.ts           single driven damped oscillator (state + derived analytics)
   ├─ BaseOscillatorScreenModel.ts  1–10 ResonanceModel instances, sweep, shared driver params
   ├─ RungeKuttaSolver.ts, AdaptiveRK45Solver.ts, AnalyticalSolver.ts
-  ├─ FrequencySweepController.ts, TraceDataModel.ts, MeasurementLineModel.ts
-  └─ ResonanceConstants.ts       physics ranges, layout, sweep rate
+  └─ FrequencySweepController.ts, TraceDataModel.ts, MeasurementLineModel.ts
 
 src/common/view/
   ├─ BaseOscillatorScreenView.ts   driver plate, springs, masses, ruler, control panel
@@ -48,8 +49,8 @@ Data flows Model → View through AXON `Property` objects. Model +y is up; views
   - `ResonanceSonification.ts`: raw `setTimeout` after Web Audio gain fade (wall-clock, not sim time).
   - `ResonanceCurveCalculator.ts`: progressive precompute via `requestAnimationFrame` with version
     guard — background cache only, never partial reads in physics.
-- **Nested constants carve-out.** Shared + per-screen constants under `src/common/` and screen
-  folders; no single root constants file beyond `ResonanceConstants.ts`.
+- **Constants.** Shared physics/layout values live in root `src/ResonanceConstants.ts`;
+  domain-specific plate values live in `src/chladni-patterns/model/ChladniConstants.ts`.
 
 ## Numerical integration
 
@@ -73,7 +74,7 @@ feed smooth phase-space graphs on the Phase Analysis screen.
 
 ```bash
 npm test                  # Vitest unit tests (ResonanceModel, BaseModel, …)
-npm run test:fuzz:quick   # Playwright fuzz smoke (optional)
+npm run test:fuzz:quick   # Optional pointer + keyboard fuzz, 10s each
 ```
 
 Key invariants tested: f₀ = (1/2π)√(k/m), critical damping b = 2√(mk), solver agreement,

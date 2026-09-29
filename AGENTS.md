@@ -116,12 +116,14 @@ npm run lint && npm run check && npm run build && npm test
 | `npm run lint` / `npm run fix` | Biome check / auto-fix |
 | `npm test` | Vitest unit tests |
 | `npm run test:coverage` | Vitest with coverage |
-| `npm run test:fuzz` | Playwright fuzz (60s default) |
-| `npm run test:fuzz:quick` | 30s fuzz |
-| `npm run test:fuzz:long` | 5 min fuzz |
+| `npm run test:fuzz` | Playwright fuzz smoke (pointer + keyboard, `?ea`, 30s each) |
+| `npm run test:fuzz:quick` | 10s per fuzz mode |
+| `npm run test:fuzz:long` | 300s per fuzz mode |
 | `npm run icons` | Regenerate PWA icons |
 
-Fuzz env: `FUZZ_SEED`, `FUZZ_DURATION`.
+Override the per-mode duration with `npm run test:fuzz -- 90`, `--duration 90`, or
+`FUZZ_DURATION=90`. `FUZZ_SEED` selects a reproducible random seed. The runner targets
+`tests/fuzz/`; any sim-specific browser specs run separately with `npx playwright test tests/browser`.
 
 ## Development notes
 

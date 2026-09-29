@@ -78,7 +78,6 @@ onReadyToLaunch(() => {
       },
     }),
     webgl: true,
-    hasKeyboardHelpContent: true,
   });
 
   sim.start();

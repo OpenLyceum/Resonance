@@ -9,11 +9,11 @@
  * value overrides the query-parameter initial value when one is present.
  */
 
-import { BooleanProperty, Property } from "scenerystack/axon";
+import { BooleanProperty, StringUnionProperty } from "scenerystack/axon";
 import type { Tandem } from "scenerystack/tandem";
-import type { SolverType } from "../common/model/SolverType.js";
+import { SolverType } from "../common/model/SolverType.js";
 import ResonanceNamespace from "../ResonanceNamespace.js";
-import type { RendererType } from "./RendererType.js";
+import { RendererType } from "./RendererType.js";
 import resonanceQueryParameters from "./resonanceQueryParameters.js";
 
 /** Shape of preferences as stored in localStorage (may be partial). */
@@ -26,22 +26,25 @@ export interface StoredPreferences {
 const STORAGE_KEY = "resonance-preferences";
 
 export class ResonancePreferencesModel {
-  public readonly solverTypeProperty: Property<SolverType>;
+  public readonly solverTypeProperty: StringUnionProperty<SolverType>;
   public readonly showModalControlsProperty: BooleanProperty;
-  public readonly rendererTypeProperty: Property<RendererType>;
+  public readonly rendererTypeProperty: StringUnionProperty<RendererType>;
 
   public constructor(tandem?: Tandem) {
-    this.solverTypeProperty = new Property<SolverType>(
-      resonanceQueryParameters.solverType as SolverType,
-      tandem ? { tandem: tandem.createTandem("solverTypeProperty") } : undefined,
-    );
+    this.solverTypeProperty = new StringUnionProperty<SolverType>(resonanceQueryParameters.solverType as SolverType, {
+      validValues: Object.values(SolverType),
+      ...(tandem ? { tandem: tandem.createTandem("solverTypeProperty") } : {}),
+    });
     this.showModalControlsProperty = new BooleanProperty(
       resonanceQueryParameters.showModalControls,
       tandem ? { tandem: tandem.createTandem("showModalControlsProperty") } : undefined,
     );
-    this.rendererTypeProperty = new Property<RendererType>(
+    this.rendererTypeProperty = new StringUnionProperty<RendererType>(
       resonanceQueryParameters.rendererType as RendererType,
-      tandem ? { tandem: tandem.createTandem("rendererTypeProperty") } : undefined,
+      {
+        validValues: Object.values(RendererType),
+        ...(tandem ? { tandem: tandem.createTandem("rendererTypeProperty") } : {}),
+      },
     );
 
     this.loadPreferences();

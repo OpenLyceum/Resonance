@@ -12,7 +12,7 @@
  */
 
 import { NumberProperty, type TReadOnlyProperty } from "scenerystack/axon";
-import { Vector2 } from "scenerystack/dot";
+import { dotRandom, Vector2 } from "scenerystack/dot";
 import {
   type BoundaryMode,
   GRAIN_COUNT_OPTIONS,
@@ -128,8 +128,8 @@ export class ParticleManager {
     for (let i = 0; i < count; i++) {
       const particle = this.particlePool[i]!;
       // Random position in centered coordinates
-      const x = (Math.random() - 0.5) * 2 * halfWidth;
-      const y = (Math.random() - 0.5) * 2 * halfHeight;
+      const x = dotRandom.nextDoubleBetween(-halfWidth, halfWidth);
+      const y = dotRandom.nextDoubleBetween(-halfHeight, halfHeight);
       particle.setXY(x, y);
     }
 
@@ -172,7 +172,7 @@ export class ParticleManager {
 
       // Random walk with step size proportional to displacement
       const stepSize = PARTICLE_STEP_SCALE * displacement * timeScale * STEP_TIME_SCALE;
-      const angle = Math.random() * TWO_PI;
+      const angle = dotRandom.nextDouble() * TWO_PI;
 
       // Update position
       const newX = x + stepSize * Math.cos(angle);

@@ -14,6 +14,7 @@ import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Node, Text } from "scenerystack/scenery";
 import { ArrowNode, PhetFont } from "scenerystack/scenery-phet";
 import type { ResonanceModel } from "../../common/model/ResonanceModel.js";
+import { StringManager } from "../../i18n/StringManager.js";
 import ResonanceColors from "../../ResonanceColors.js";
 
 // Scale factors to convert physics values to pixel lengths
@@ -73,7 +74,8 @@ export class OscillatorVectorNode extends Node {
       headHeight: ARROW_HEAD_HEIGHT,
       tailWidth: ARROW_TAIL_WIDTH,
     });
-    this.velocityLabel = new Text("v", {
+    const controls = StringManager.getInstance().getAllStringProperties().resonance.controls;
+    this.velocityLabel = new Text(controls.velocitySymbolStringProperty, {
       font: LABEL_FONT,
       fill: ResonanceColors.velocityVectorProperty,
     });
@@ -90,7 +92,7 @@ export class OscillatorVectorNode extends Node {
       headHeight: ARROW_HEAD_HEIGHT,
       tailWidth: ARROW_TAIL_WIDTH,
     });
-    this.accelerationLabel = new Text("a", {
+    this.accelerationLabel = new Text(controls.accelerationSymbolStringProperty, {
       font: LABEL_FONT,
       fill: ResonanceColors.accelerationVectorProperty,
     });
@@ -107,7 +109,7 @@ export class OscillatorVectorNode extends Node {
       headHeight: ARROW_HEAD_HEIGHT,
       tailWidth: ARROW_TAIL_WIDTH,
     });
-    this.appliedForceLabel = new Text("F", {
+    this.appliedForceLabel = new Text(controls.appliedForceSymbolStringProperty, {
       font: LABEL_FONT,
       fill: ResonanceColors.appliedForceVectorProperty,
     });

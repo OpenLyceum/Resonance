@@ -108,7 +108,7 @@ export class GraphControlsPanel {
     });
 
     // Create title in format "(Y vs X)"
-    const leftParen = new Text("(", {
+    const leftParen = new Text(ResonanceStrings.controls.graphTitleOpenStringProperty, {
       font: TITLE_FONT,
       fill: ResonanceColors.textProperty,
     });
@@ -121,7 +121,7 @@ export class GraphControlsPanel {
       },
     );
 
-    const rightParen = new Text(")", {
+    const rightParen = new Text(ResonanceStrings.controls.graphTitleCloseStringProperty, {
       font: TITLE_FONT,
       fill: ResonanceColors.textProperty,
     });

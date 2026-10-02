@@ -71,7 +71,9 @@
       "graph": "Graphique",
       "fast": "Rapide",
       "grid": "Grille",
-      "graphVs": "vs"
+      "graphVs": "vs",
+      "graphTitleOpen": "(",
+      "graphTitleClose": ")"
     },
     "preferences": {
       "title": "Préférences",

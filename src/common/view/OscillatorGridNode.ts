@@ -6,11 +6,13 @@
  * - Scale indicator with double-headed arrow between two major grid lines
  */
 
+import { PatternStringProperty } from "scenerystack/axon";
 import type { Bounds2 } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Line, Node, Path, Text } from "scenerystack/scenery";
 import { ArrowNode, PhetFont } from "scenerystack/scenery-phet";
+import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import ResonanceColors from "../../ResonanceColors.js";
 
 // Default grid options
@@ -200,12 +202,15 @@ export class OscillatorGridNode extends Node {
 
     // Label showing the distance (convert meters to cm)
     const distanceCm = this.majorSpacing * 100;
-    const label = new Text(`${distanceCm} cm`, {
-      font: new PhetFont({ size: 12 }),
-      fill: ResonanceColors.textProperty,
-      right: indicatorX - 8,
-      centerY: (arrowTop + arrowBottom) / 2,
-    });
+    const label = new Text(
+      new PatternStringProperty(ResonanceStrings.units.cmPatternStringProperty, { value: distanceCm }),
+      {
+        font: new PhetFont({ size: 12 }),
+        fill: ResonanceColors.textProperty,
+        right: indicatorX - 8,
+        centerY: (arrowTop + arrowBottom) / 2,
+      },
+    );
 
     // Container for scale indicator
     const scaleIndicator = new Node({

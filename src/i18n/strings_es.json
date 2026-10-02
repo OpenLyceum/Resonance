@@ -71,7 +71,9 @@
       "graph": "Gráfica",
       "fast": "Rápido",
       "grid": "Cuadrícula",
-      "graphVs": "vs"
+      "graphVs": "vs",
+      "graphTitleOpen": "(",
+      "graphTitleClose": ")"
     },
     "preferences": {
       "title": "Preferencias",

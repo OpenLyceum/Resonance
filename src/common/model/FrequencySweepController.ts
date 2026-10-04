@@ -112,7 +112,7 @@ export class FrequencySweepController {
     });
 
     // Listen for sweep completion
-    this.sweepAnimation.endedEmitter.addListener(() => {
+    this.sweepAnimation.finishEmitter.addListener(() => {
       this.isSweepingProperty.value = false;
       this.pausedFrequency = null;
       this.sweepCompletedEmitter.emit();

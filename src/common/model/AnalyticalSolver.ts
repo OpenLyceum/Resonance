@@ -79,9 +79,10 @@ export class AnalyticalSolver extends ODESolver {
 
   // --- Last state written by the solver (for detecting external modifications) ---
   // Any external source (mouse drag, keyboard input, accessibility, presets, etc.)
-  // can modify position/velocity. Comparing against these lets us detect that and resync.
+  // can modify position, velocity, or driver phase. Compare these to resync.
   private lastWrittenPosition: number = NaN;
   private lastWrittenVelocity: number = NaN;
+  private lastWrittenPhase: number = NaN;
 
   // --- Precomputed analytical constants ---
   private regime: DampingRegime = DampingRegime.UNDERDAMPED;
@@ -100,6 +101,8 @@ export class AnalyticalSolver extends ODESolver {
   private springConstant: number = 0;
   private drivingAmplitude: number = 0;
   private dampingCoeff: number = 0;
+  private resonantDriveCoefficient: number = 0;
+  private isUndampedResonance: boolean = false;
 
   private static readonly CRITICAL_DAMPING_EPSILON = 1e-6;
 
@@ -194,6 +197,7 @@ export class AnalyticalSolver extends ODESolver {
     // 8. Track the state we wrote so we can detect external modifications
     this.lastWrittenPosition = xAt1;
     this.lastWrittenVelocity = vAt1;
+    this.lastWrittenPhase = phaseAt1;
   }
 
   /**
@@ -255,12 +259,20 @@ export class AnalyticalSolver extends ODESolver {
     }
 
     // Compute particular solution constants (if driving is enabled)
+    this.resonantDriveCoefficient = 0;
+    this.isUndampedResonance = false;
     if (this.drivingEnabled) {
       this.omegaDrive = this.cachedParams.drivingFrequency * 2 * Math.PI;
       const F0 = k * this.drivingAmplitude;
       const term1 = k - m * this.omegaDrive * this.omegaDrive;
       const term2 = bVal * this.omegaDrive;
       const denom = Math.sqrt(term1 * term1 + term2 * term2);
+      // At undamped resonance the particular solution grows with time:
+      // x_p(τ) = -F₀ τ cos(phase₀ + ωτ) / (2mω).
+      if (bVal === 0 && Math.abs(term1) <= Number.EPSILON * Math.max(k, m * this.omegaDrive ** 2) * 8) {
+        this.isUndampedResonance = true;
+        this.resonantDriveCoefficient = F0 / (2 * m * this.omegaDrive);
+      }
       this.x0ss = denom > 1e-10 ? F0 / denom : F0 / 1e-10;
 
       // Phase lag calculation using atan2 for correct quadrant
@@ -282,8 +294,8 @@ export class AnalyticalSolver extends ODESolver {
     // x0 = xEq + C1·h1(0) + C2·h2(0) + xp(0)
     // v0 = C1·h1'(0) + C2·h2'(0) + xp'(0)
 
-    const xp0 = this.drivingEnabled ? this.x0ss * Math.sin(this.phase0 - this.phiSS) : 0;
-    const xpDot0 = this.drivingEnabled ? this.x0ss * this.omegaDrive * Math.cos(this.phase0 - this.phiSS) : 0;
+    const xp0 = this.computeParticularPosition(0);
+    const xpDot0 = this.computeParticularVelocity(0);
 
     const residualX = this.x0 - xp0 - this.xEq;
     const residualV = this.v0 - xpDot0;
@@ -338,13 +350,7 @@ export class AnalyticalSolver extends ODESolver {
     }
 
     // Particular solution (steady-state driven response)
-    let xp = 0;
-    if (this.drivingEnabled) {
-      const phase = this.phase0 + this.omegaDrive * tau;
-      xp = this.x0ss * Math.sin(phase - this.phiSS);
-    }
-
-    return xh + xp + this.xEq;
+    return xh + this.computeParticularPosition(tau) + this.xEq;
   }
 
   /**
@@ -383,13 +389,29 @@ export class AnalyticalSolver extends ODESolver {
     }
 
     // Particular solution derivative
-    let vp = 0;
-    if (this.drivingEnabled) {
-      const phase = this.phase0 + this.omegaDrive * tau;
-      vp = this.x0ss * this.omegaDrive * Math.cos(phase - this.phiSS);
-    }
+    return vh + this.computeParticularVelocity(tau);
+  }
 
-    return vh + vp;
+  private computeParticularPosition(tau: number): number {
+    if (!this.drivingEnabled) {
+      return 0;
+    }
+    const phase = this.computePhase(tau);
+    if (this.isUndampedResonance) {
+      return -this.resonantDriveCoefficient * tau * Math.cos(phase);
+    }
+    return this.x0ss * Math.sin(phase - this.phiSS);
+  }
+
+  private computeParticularVelocity(tau: number): number {
+    if (!this.drivingEnabled) {
+      return 0;
+    }
+    const phase = this.computePhase(tau);
+    if (this.isUndampedResonance) {
+      return this.resonantDriveCoefficient * (this.omegaDrive * tau * Math.sin(phase) - Math.cos(phase));
+    }
+    return this.x0ss * this.omegaDrive * Math.cos(phase - this.phiSS);
   }
 
   /**
@@ -426,9 +448,13 @@ export class AnalyticalSolver extends ODESolver {
       return true;
     }
 
-    // Check if position or velocity was modified externally since our last step
+    // Check whether motion or the shared driver phase changed externally.
     const state = model.getState();
-    if (state[0] !== this.lastWrittenPosition || state[1] !== this.lastWrittenVelocity) {
+    if (
+      state[0] !== this.lastWrittenPosition ||
+      state[1] !== this.lastWrittenVelocity ||
+      state[2] !== this.lastWrittenPhase
+    ) {
       return true;
     }
 

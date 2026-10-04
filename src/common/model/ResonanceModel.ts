@@ -878,6 +878,17 @@ export class ResonanceModel extends BaseModel {
     );
   }
 
+  /** Keep the driver clock running while the user holds the mass. */
+  protected override advanceState(dt: number): void {
+    if (this.isDraggingProperty.value) {
+      if (this.drivingEnabledProperty.value) {
+        this.drivingPhaseProperty.value += dt * this.drivingFrequencyProperty.value * 2 * Math.PI;
+      }
+    } else {
+      super.advanceState(dt);
+    }
+  }
+
   /**
    * Get the current state vector [position, velocity, drivingPhase, driverEnergy, thermalEnergy, sumX², sumV²]
    */

@@ -54,20 +54,12 @@ export class OscillatorPlaybackControlNode extends HBox {
       includeStepBackwardButton: true,
       stepForwardButtonOptions: {
         listener: () => {
-          model.resonanceModel.step(ResonanceConstants.STEP_DT, true);
-          const count = model.resonatorCountProperty.value;
-          for (let i = 1; i < count; i++) {
-            model.getResonatorModel(i).step(ResonanceConstants.STEP_DT, true);
-          }
+          model.step(ResonanceConstants.STEP_DT, true);
         },
       },
       stepBackwardButtonOptions: {
         listener: () => {
-          model.resonanceModel.step(-ResonanceConstants.STEP_DT, true);
-          const count = model.resonatorCountProperty.value;
-          for (let i = 1; i < count; i++) {
-            model.getResonatorModel(i).step(-ResonanceConstants.STEP_DT, true);
-          }
+          model.step(-ResonanceConstants.STEP_DT, true);
         },
       },
     });

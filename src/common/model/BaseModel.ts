@@ -117,10 +117,15 @@ export abstract class BaseModel implements ODEModel {
     }
 
     // Integrate the physics with sub-step callback for data collection
-    this.solver.step(adjustedDt, this, this.boundSubStepCallback);
+    this.advanceState(adjustedDt);
 
     // Update time
     this.timeProperty.value += adjustedDt;
+  }
+
+  /** Advance state while allowing subclasses to constrain user-controlled motion. */
+  protected advanceState(dt: number): void {
+    this.solver.step(dt, this, this.boundSubStepCallback);
   }
 
   /**

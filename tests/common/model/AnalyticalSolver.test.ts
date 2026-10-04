@@ -14,6 +14,41 @@ import { RungeKuttaSolver } from "../../../src/common/model/RungeKuttaSolver.js"
 import { SolverType } from "../../../src/common/model/SolverType.js";
 
 describe("AnalyticalSolver", () => {
+  it.each([0, 0.7, Math.PI / 2])("matches RK4 at undamped resonance with initial phase %s", (phase) => {
+    const models = [SolverType.ANALYTICAL, SolverType.RUNGE_KUTTA_4].map((solverType) => {
+      const model = new ResonanceModel({ solverTypeProperty: new Property<SolverType>(solverType) });
+      model.massProperty.value = 1;
+      model.springConstantProperty.value = 4;
+      model.dampingProperty.value = 0;
+      model.gravityProperty.value = 0;
+      model.positionProperty.value = 0.02;
+      model.velocityProperty.value = -0.01;
+      model.drivingEnabledProperty.value = true;
+      model.drivingAmplitudeProperty.value = 0.01;
+      model.drivingFrequencyProperty.value = 1 / Math.PI;
+      model.drivingPhaseProperty.value = phase;
+      return model;
+    });
+    const analytical = models[0]!;
+    const numerical = models[1]!;
+    for (let i = 0; i < 200; i++) {
+      for (const model of models) {
+        model.step(0.02);
+      }
+      expect(analytical.positionProperty.value).toBeCloseTo(numerical.positionProperty.value, 9);
+      expect(analytical.velocityProperty.value).toBeCloseTo(numerical.velocityProperty.value, 9);
+    }
+    // Resynchronize the IVP when the driver changes, then returns to resonance.
+    for (const frequency of [0.4, 1 / Math.PI]) {
+      for (const model of models) {
+        model.drivingFrequencyProperty.value = frequency;
+        model.step(0.02);
+      }
+      expect(analytical.positionProperty.value).toBeCloseTo(numerical.positionProperty.value, 9);
+      expect(analytical.velocityProperty.value).toBeCloseTo(numerical.velocityProperty.value, 9);
+    }
+  });
+
   describe("API conformance", () => {
     it("should extend ODESolver", () => {
       const solver = new AnalyticalSolver();

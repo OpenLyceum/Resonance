@@ -378,17 +378,18 @@ export class BaseOscillatorScreenModel {
     }
   }
 
-  public step(dt: number): void {
+  public step(dt: number, forceStep: boolean = false): void {
     const count = this.resonatorCountProperty.value;
-    // Step all active resonator models that are not being dragged.
+    // Step all active resonators; dragged masses still advance the driver clock.
     // Since isPlayingProperty and timeSpeedProperty are synced,
     // they will all advance the same amount.
     for (let i = 0; i < count; i++) {
       const model = this.getResonatorModel(i);
-      // Skip stepping if this resonator is being dragged by the user
-      if (!model.isDraggingProperty.value) {
-        model.step(dt);
-      }
+      model.step(dt, forceStep);
+    }
+    // Inactive masses keep their state, but share the current driver phase.
+    for (let i = count; i < this.resonatorModels.length; i++) {
+      this.getResonatorModel(i).drivingPhaseProperty.value = this.resonanceModel.drivingPhaseProperty.value;
     }
   }
 }

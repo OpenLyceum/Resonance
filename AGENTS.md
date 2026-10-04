@@ -26,6 +26,7 @@ First three screens share `BaseOscillatorScreenModel` / `BaseOscillatorScreenVie
 | Frequency sweep | `FrequencySweepController.ts`, `SweepButton.ts` |
 | Trace / graph | `OscillatorTraceNode.ts`, `TraceDataModel.ts`, `src/common/view/graph/ConfigurableGraph.ts` |
 | Chladni | `src/chladni-patterns/model/`, `src/chladni-patterns/view/`, `ResonanceCurveCalculator.ts`, `ResonanceSonification.ts` |
+| Keyboard | `ChladniHotkeyData.ts` (shared by `ChladniScreenView`'s global `KeyboardListener` and `ChladniKeyboardHelpContent`); oscillator screens use `ResonanceKeyboardHelpContent` |
 | Colors / i18n | `ResonanceColors.ts`, `src/i18n/strings_{en,es,fr}.json`, `StringManager.ts` |
 
 ## Model
@@ -34,9 +35,6 @@ First three screens share `BaseOscillatorScreenModel` / `BaseOscillatorScreenVie
   Driving amplitude stored in meters, displayed in cm — check `ResonanceConstants` for ranges.
 - **Coordinates:** model Y is up; view Y is down; use `ModelViewTransform2`.
 - **Property sync:** use `CircularUpdateGuard` when syncing related properties (e.g. m ↔ cm).
-- **Chladni sonification (allowed exception):** `ResonanceSonification.ts` uses a raw
-  `setTimeout(…, 30 ms)` after a gain fade — wall-clock teardown, not `stepTimer`, so fade-out
-  completes while paused (CONVENTIONS.md §2.9 / §7).
 - **Progressive curve precompute (allowed exception):** `ResonanceCurveCalculator.ts` chunks
   resonance-strength lookup across `requestAnimationFrame` with a `computationVersion` guard —
   background precompute, not physics stepping (CONVENTIONS.md §2.9 / §7).

@@ -283,6 +283,12 @@
         "rulerDescription": "Regla que muestra las dimensiones de la placa. Ancho: {{width}} cm, Alto: {{height}} cm. Marcas principales cada 5 cm.",
         "gridLabel": "Cuadrícula de Referencia",
         "gridDescription": "Superposición de cuadrícula para referencia espacial en la placa de {{width}} cm por {{height}} cm. Líneas principales cada 5 cm, líneas menores cada 1 cm.",
+        "visualizationDescription": "Visualización de la placa de Chladni con {{count}} partículas sobre una placa de {{material}} a {{frequency}} Hz. Las partículas se acumulan a lo largo de las líneas nodales, donde la placa no se desplaza.",
+        "resonanceCurveDescription": "Curva de resonancia para una placa de {{material}}. Frecuencias mostradas de {{minFrequency}} a {{maxFrequency}} Hz. Marcador de frecuencia actual en {{frequency}} Hz. {{response}}",
+        "responseStrongPeak": "En un pico de resonancia intenso.",
+        "responseNearPeak": "Cerca de un pico de resonancia.",
+        "responseModerate": "Nivel de respuesta moderado.",
+        "responseLow": "Nivel de respuesta bajo.",
         "controlPanel": {
           "materialLabel": "Selección de Material",
           "materialDescription": "Elija el material de la placa que afecta las frecuencias de resonancia",

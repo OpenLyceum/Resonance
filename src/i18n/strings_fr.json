@@ -283,6 +283,12 @@
         "rulerDescription": "Règle montrant les dimensions de la plaque. Largeur: {{width}} cm, Hauteur: {{height}} cm. Graduations principales tous les 5 cm.",
         "gridLabel": "Grille de Référence",
         "gridDescription": "Superposition de grille pour référence spatiale sur la plaque de {{width}} cm par {{height}} cm. Lignes principales tous les 5 cm, lignes mineures tous les 1 cm.",
+        "visualizationDescription": "Visualisation de la plaque de Chladni montrant {{count}} particules sur une plaque de {{material}} à {{frequency}} Hz. Les particules se rassemblent le long des lignes nodales, où la plaque ne se déplace pas.",
+        "resonanceCurveDescription": "Courbe de résonance pour une plaque de {{material}}. Fréquences affichées de {{minFrequency}} à {{maxFrequency}} Hz. Marqueur de fréquence actuelle à {{frequency}} Hz. {{response}}",
+        "responseStrongPeak": "Sur un pic de résonance marqué.",
+        "responseNearPeak": "Près d'un pic de résonance.",
+        "responseModerate": "Réponse modérée.",
+        "responseLow": "Réponse faible.",
         "controlPanel": {
           "materialLabel": "Sélection du Matériau",
           "materialDescription": "Choisissez le matériau de la plaque qui affecte les fréquences de résonance",

@@ -591,11 +591,7 @@ export class OscillatorControlPanel extends Panel {
     });
 
     // Announce state changes via voicing
-    // Type assertion to work around deeply nested type inference
-    const alerts = ResonanceStrings.a11y.alerts as unknown as {
-      gravityOnStringProperty: { value: string };
-      gravityOffStringProperty: { value: string };
-    };
+    const alerts = ResonanceStrings.a11y.alerts;
     gravityEnabledProperty.lazyLink((enabled: boolean) => {
       const announcement = enabled ? alerts.gravityOnStringProperty.value : alerts.gravityOffStringProperty.value;
       voicingUtteranceQueue.addToBack(announcement);
@@ -636,10 +632,7 @@ export class OscillatorControlPanel extends Panel {
 
     // Announce visibility changes via voicing
     rulerVisibleProperty.lazyLink((visible: boolean) => {
-      const alerts = ResonanceStrings.a11y.alerts as unknown as {
-        rulerShownStringProperty: { value: string };
-        rulerHiddenStringProperty: { value: string };
-      };
+      const alerts = ResonanceStrings.a11y.alerts;
       const announcement = visible ? alerts.rulerShownStringProperty.value : alerts.rulerHiddenStringProperty.value;
       voicingUtteranceQueue.addToBack(announcement);
     });
@@ -671,10 +664,7 @@ export class OscillatorControlPanel extends Panel {
 
     // Announce visibility changes via voicing
     gridVisibleProperty.lazyLink((visible: boolean) => {
-      const gridAlerts = ResonanceStrings.a11y.alerts as unknown as {
-        gridShownStringProperty: { value: string };
-        gridHiddenStringProperty: { value: string };
-      };
+      const gridAlerts = ResonanceStrings.a11y.alerts;
       const announcement = visible
         ? gridAlerts.gridShownStringProperty.value
         : gridAlerts.gridHiddenStringProperty.value;
@@ -721,10 +711,7 @@ export class OscillatorControlPanel extends Panel {
 
     // Announce trace state changes via voicing
     traceEnabledProperty.lazyLink((enabled: boolean) => {
-      const traceAlerts = ResonanceStrings.a11y.alerts as unknown as {
-        traceStartedStringProperty: { value: string };
-        traceStoppedStringProperty: { value: string };
-      };
+      const traceAlerts = ResonanceStrings.a11y.alerts;
       const announcement = enabled
         ? traceAlerts.traceStartedStringProperty.value
         : traceAlerts.traceStoppedStringProperty.value;

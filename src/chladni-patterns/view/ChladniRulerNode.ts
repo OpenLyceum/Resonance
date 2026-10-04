@@ -6,7 +6,6 @@
  * Extends ChladniOverlayNode for common overlay functionality.
  */
 
-import { StringProperty } from "scenerystack/axon";
 import { Line, Text } from "scenerystack/scenery";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import ResonanceColors from "../../ResonanceColors.js";
@@ -34,13 +33,8 @@ export class ChladniRulerNode extends ChladniOverlayNode {
     this.ariaRole = "img";
     this.accessibleName = ResonanceStrings.chladni.a11y.rulerLabelStringProperty;
 
-    // Create description with plate dimensions
-    const { widthCm, heightCm } = this.getPlateDimensionsCm();
-    const template = ResonanceStrings.chladni.a11y.rulerDescriptionStringProperty.value;
-    const description = template
-      .replace("{{width}}", Math.round(widthCm).toString())
-      .replace("{{height}}", Math.round(heightCm).toString());
-    this.descriptionContent = new StringProperty(description);
+    // Describe the plate dimensions (tracks locale and plate resizes)
+    this.setPlateDescription(ResonanceStrings.chladni.a11y.rulerDescriptionStringProperty);
   }
 
   /**

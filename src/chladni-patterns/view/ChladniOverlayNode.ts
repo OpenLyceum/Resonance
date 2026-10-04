@@ -5,6 +5,7 @@
  * Provides common functionality for managing overlay dimensions and updates.
  */
 
+import { NumberProperty, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
 import { Node } from "scenerystack/scenery";
 
 /**
@@ -35,6 +36,10 @@ export abstract class ChladniOverlayNode extends Node {
   protected plateWidthMeters: number;
   protected plateHeightMeters: number;
 
+  // Plate size in whole centimeters, feeding the PDOM description so it tracks resizes
+  private readonly plateWidthCmProperty: NumberProperty;
+  private readonly plateHeightCmProperty: NumberProperty;
+
   public constructor(
     visualizationWidth: number,
     visualizationHeight: number,
@@ -47,8 +52,21 @@ export abstract class ChladniOverlayNode extends Node {
     this.visualizationHeight = visualizationHeight;
     this.plateWidthMeters = plateWidthMeters;
     this.plateHeightMeters = plateHeightMeters;
+    this.plateWidthCmProperty = new NumberProperty(Math.round(plateWidthMeters * 100));
+    this.plateHeightCmProperty = new NumberProperty(Math.round(plateHeightMeters * 100));
 
     this.create();
+  }
+
+  /**
+   * Use a "{{width}}" / "{{height}}" pattern (centimeters) as this overlay's PDOM
+   * description. It stays current across locale changes and plate resizes.
+   */
+  protected setPlateDescription(patternStringProperty: TReadOnlyProperty<string>): void {
+    this.descriptionContent = new PatternStringProperty(patternStringProperty, {
+      width: this.plateWidthCmProperty,
+      height: this.plateHeightCmProperty,
+    });
   }
 
   /**
@@ -97,6 +115,8 @@ export abstract class ChladniOverlayNode extends Node {
     this.visualizationHeight = visualizationHeight;
     this.plateWidthMeters = plateWidthMeters;
     this.plateHeightMeters = plateHeightMeters;
+    this.plateWidthCmProperty.value = Math.round(plateWidthMeters * 100);
+    this.plateHeightCmProperty.value = Math.round(plateHeightMeters * 100);
 
     this.removeAllChildren();
     this.create();

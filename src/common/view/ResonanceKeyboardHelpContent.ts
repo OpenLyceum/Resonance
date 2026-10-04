@@ -1,7 +1,9 @@
 /**
- * Keyboard shortcuts help content for Resonance simulation.
- * Displays available keyboard shortcuts in a two-column layout.
- * Includes simulation-specific shortcuts for Chladni and oscillator screens.
+ * Keyboard shortcuts help content for the three oscillator screens (Single
+ * Oscillator, Multiple Oscillators, Phase Analysis). These screens have no
+ * screen-level hotkeys: draggables (ruler, masses, measurement lines) and
+ * sliders cover their keyboard input. The Chladni screen adds its own
+ * shortcuts in ChladniKeyboardHelpContent.
  */
 
 import {
@@ -9,67 +11,20 @@ import {
   KeyboardHelpIconFactory,
   KeyboardHelpSection,
   KeyboardHelpSectionRow,
-  LetterKeyNode,
   SliderControlsKeyboardHelpSection,
-  TextKeyNode,
   TwoColumnKeyboardHelpContent,
 } from "scenerystack/scenery-phet";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import ResonanceNamespace from "../../ResonanceNamespace.js";
 
 // Layout constants
-const COLUMN_SPACING = 20;
-const SECTION_SPACING = 15;
-
-/**
- * Custom keyboard help section for simulation-specific shortcuts.
- */
-class SimulationShortcutsKeyboardHelpSection extends KeyboardHelpSection {
-  public constructor() {
-    // Play/Pause with Space
-    const playPauseRow = KeyboardHelpSectionRow.labelWithIcon(
-      ResonanceStrings.keyboardHelp.playPauseStringProperty,
-      TextKeyNode.space(),
-    );
-
-    // Adjust frequency with arrow keys
-    const frequencyRow = KeyboardHelpSectionRow.labelWithIcon(
-      ResonanceStrings.keyboardHelp.adjustFrequencyStringProperty,
-      KeyboardHelpIconFactory.leftRightArrowKeysRowIcon(),
-    );
-
-    // Large frequency steps with Shift + arrows
-    const largeStepRow = KeyboardHelpSectionRow.labelWithIcon(
-      ResonanceStrings.keyboardHelp.largeFrequencyStepsStringProperty,
-      KeyboardHelpIconFactory.shiftPlusIcon(KeyboardHelpIconFactory.upDownArrowKeysRowIcon()),
-    );
-
-    // Reset with R key
-    const resetRow = KeyboardHelpSectionRow.labelWithIcon(
-      ResonanceStrings.keyboardHelp.resetSimulationStringProperty,
-      new LetterKeyNode("R"),
-    );
-
-    // Stop sweep with Escape
-    const escapeRow = KeyboardHelpSectionRow.labelWithIcon(
-      ResonanceStrings.keyboardHelp.stopFrequencySweepStringProperty,
-      TextKeyNode.esc(),
-    );
-
-    super(ResonanceStrings.keyboardHelp.simulationControlsStringProperty, [
-      playPauseRow,
-      frequencyRow,
-      largeStepRow,
-      resetRow,
-      escapeRow,
-    ]);
-  }
-}
+export const COLUMN_SPACING = 20;
+export const SECTION_SPACING = 15;
 
 /**
  * Custom keyboard help section for dragging objects.
  */
-class DragObjectsKeyboardHelpSection extends KeyboardHelpSection {
+export class DragObjectsKeyboardHelpSection extends KeyboardHelpSection {
   public constructor() {
     // Move with arrow keys
     const moveRow = KeyboardHelpSectionRow.labelWithIcon(
@@ -92,18 +47,15 @@ export class ResonanceKeyboardHelpContent extends TwoColumnKeyboardHelpContent {
     // Create slider controls section (for frequency, amplitude, mass, etc.)
     const sliderControlsSection = new SliderControlsKeyboardHelpSection();
 
-    // Create simulation shortcuts section
-    const simulationSection = new SimulationShortcutsKeyboardHelpSection();
-
     // Create drag controls section
     const dragSection = new DragObjectsKeyboardHelpSection();
 
     // Create basic actions section (tab navigation, escape, etc.)
     const basicActionsSection = new BasicActionsKeyboardHelpSection();
 
-    // Left column: simulation + drag controls
+    // Left column: drag controls
     // Right column: slider + basic actions
-    super([simulationSection, dragSection], [sliderControlsSection, basicActionsSection], {
+    super([dragSection], [sliderControlsSection, basicActionsSection], {
       columnSpacing: COLUMN_SPACING,
       sectionSpacing: SECTION_SPACING,
     });

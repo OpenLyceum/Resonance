@@ -19,7 +19,7 @@
 import { Property } from "scenerystack/axon";
 import { Bounds2, Vector2, Vector2Property } from "scenerystack/dot";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
-import { ModelViewTransform2 } from "scenerystack/phetcommon";
+import { ModelViewTransform2, StringUtils } from "scenerystack/phetcommon";
 import { Line, Node, Rectangle, RichDragListener, Text } from "scenerystack/scenery";
 import { type ParametricSpringNode, ResetAllButton, RulerNode } from "scenerystack/scenery-phet";
 import { ScreenView, type ScreenViewOptions } from "scenerystack/sim";
@@ -307,14 +307,7 @@ export class BaseOscillatorScreenView extends ScreenView {
    * Set up screen reader alerts for important state changes.
    */
   protected setupAccessibilityAlerts(): void {
-    // Get alert string properties (with type assertion to work around deeply nested type inference)
-    const alerts = ResonanceStrings.a11y.alerts as unknown as {
-      simulationPlayingStringProperty: { value: string };
-      simulationPausedStringProperty: { value: string };
-      gravityOnStringProperty: { value: string };
-      gravityOffStringProperty: { value: string };
-      resonatorCountStringProperty: { value: string };
-    };
+    const alerts = ResonanceStrings.a11y.alerts;
 
     // Announce play/pause state changes
     this.model.isPlayingProperty.lazyLink((isPlaying: boolean) => {
@@ -343,7 +336,7 @@ export class BaseOscillatorScreenView extends ScreenView {
     // Announce resonator count changes (only for multi-oscillator screens)
     if (!this.model.singleOscillatorMode) {
       this.model.resonatorCountProperty.lazyLink((count: number) => {
-        const alertString = alerts.resonatorCountStringProperty.value.replace("{{count}}", String(count));
+        const alertString = StringUtils.fillIn(alerts.resonatorCountStringProperty, { count: count });
         utteranceQueue.addToBack(
           new Utterance({
             alert: alertString,

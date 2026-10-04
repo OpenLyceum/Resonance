@@ -9,6 +9,7 @@
  */
 
 export interface MaterialProperties {
+  /** English identifier, not for display — use MaterialStrings for the localized name. */
   readonly name: string;
   readonly dispersionConstant: number;
 }

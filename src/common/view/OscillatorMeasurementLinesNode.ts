@@ -9,6 +9,7 @@
  * - Phase Analysis
  */
 
+import { PatternStringProperty } from "scenerystack/axon";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Line, Node, Rectangle, RichDragListener } from "scenerystack/scenery";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
@@ -61,10 +62,9 @@ class MeasurementLineNode extends Node {
     // Make focusable for keyboard navigation
     this.tagName = "div";
     this.focusable = true;
-    const measurementLinePattern = ResonanceStrings.a11y.measurementLinePatternStringProperty as unknown as {
-      value: string;
-    };
-    this.accessibleName = measurementLinePattern.value.replace("{{number}}", String(lineNumber));
+    this.accessibleName = new PatternStringProperty(ResonanceStrings.a11y.measurementLinePatternStringProperty, {
+      number: lineNumber,
+    });
 
     // Position the node based on model position
     // With isometric transform, model Y=0 is equilibrium, use modelToViewY directly

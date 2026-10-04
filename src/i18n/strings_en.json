@@ -283,6 +283,12 @@
         "rulerDescription": "Ruler showing plate dimensions. Width: {{width}} cm, Height: {{height}} cm. Major tick marks every 5 cm.",
         "gridLabel": "Reference Grid",
         "gridDescription": "Grid overlay for spatial reference on the {{width}} cm by {{height}} cm plate. Major grid lines every 5 cm, minor lines every 1 cm.",
+        "visualizationDescription": "Chladni plate visualization showing {{count}} particles on a {{material}} plate at {{frequency}} Hz. Particles gather along nodal lines where the plate has zero displacement.",
+        "resonanceCurveDescription": "Resonance curve graph for {{material}} plate. Showing frequencies from {{minFrequency}} to {{maxFrequency}} Hz. Current frequency marker at {{frequency}} Hz. {{response}}",
+        "responseStrongPeak": "At a strong resonance peak.",
+        "responseNearPeak": "Near a resonance peak.",
+        "responseModerate": "Moderate response level.",
+        "responseLow": "Low response level.",
         "controlPanel": {
           "materialLabel": "Material Selection",
           "materialDescription": "Choose the plate material which affects resonance frequencies",

@@ -45,10 +45,16 @@ Data flows Model → View through AXON `Property` objects. Model +y is up; views
   guard to prevent feedback loops.
 - **Shared driver, per-resonator m/k.** `BaseOscillatorScreenModel` distributes natural frequencies
   1.0–5.5 Hz across N oscillators per configuration mode.
-- **Chladni exceptions (documented in AGENTS.md).**
-  - `ResonanceSonification.ts`: raw `setTimeout` after Web Audio gain fade (wall-clock, not sim time).
-  - `ResonanceCurveCalculator.ts`: progressive precompute via `requestAnimationFrame` with version
-    guard — background cache only, never partial reads in physics.
+- **Chladni exception (documented in AGENTS.md).** `ResonanceCurveCalculator.ts`: progressive
+  precompute via `requestAnimationFrame` with version guard — background cache only, never partial
+  reads in physics.
+- **Chladni keyboard shortcuts.** Bindings live in `ChladniHotkeyData.ts`, shared by
+  `ChladniScreenView`'s global `KeyboardListener` (scenery enables it only while that screen is
+  displayed) and `ChladniKeyboardHelpContent`. Space and the arrow keys are skipped while a PDOM
+  control has focus, since the focused control owns them. The oscillator screens have no
+  screen-level hotkeys; `ResonanceKeyboardHelpContent` documents only drag and slider input.
+- **Localized material names.** `Material.name` is an English identifier; user-visible text goes
+  through `MaterialStrings.ts`.
 - **Constants.** Shared physics/layout values live in root `src/ResonanceConstants.ts`;
   domain-specific plate values live in `src/chladni-patterns/model/ChladniConstants.ts`.
 

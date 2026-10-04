@@ -10,10 +10,10 @@
  * - View: (0,0) at top-left of visualization, +Y down
  * - ModelViewTransform2 handles the conversion with Y inversion
  *
- * Keyboard Controls:
- * - Space: Toggle play/pause
- * - Left/Right arrows: Adjust frequency (10 Hz increments, Shift for 100 Hz)
- * - Up/Down arrows: Adjust frequency (100 Hz increments, Shift for 500 Hz)
+ * Keyboard Controls (bindings in ChladniHotkeyData; active only on this screen):
+ * - Space: Toggle play/pause (when no control has focus)
+ * - Left/Right arrows: Adjust frequency (10 Hz increments, Shift for 100 Hz; when no control has focus)
+ * - Up/Down arrows: Adjust frequency (100 Hz increments, Shift for 500 Hz; when no control has focus)
  * - R: Reset all
  * - Escape: Stop sweep if running
  */
@@ -23,8 +23,20 @@ import type { Vector2 } from "scenerystack/dot";
 import { toFixed } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
-import type { ModelViewTransform2 } from "scenerystack/phetcommon";
-import { HBox, KeyboardUtils, Node, Path, Rectangle, RichDragListener, Text, VBox } from "scenerystack/scenery";
+import { type ModelViewTransform2, StringUtils } from "scenerystack/phetcommon";
+import {
+  getPDOMFocusedNode,
+  HBox,
+  HotkeyData,
+  KeyboardListener,
+  Node,
+  type OneKeyStroke,
+  Path,
+  Rectangle,
+  RichDragListener,
+  Text,
+  VBox,
+} from "scenerystack/scenery";
 import { PlayPauseStepButtonGroup, ResetAllButton } from "scenerystack/scenery-phet";
 import { audioManager, ScreenView, type ScreenViewOptions } from "scenerystack/sim";
 import { AquaRadioButtonGroup } from "scenerystack/sun";
@@ -38,12 +50,14 @@ import ResonanceConstants from "../../ResonanceConstants.js";
 import type { ChladniModel } from "../model/ChladniModel.js";
 import { ChladniControlPanel } from "./ChladniControlPanel.js";
 import { ChladniGridNode } from "./ChladniGridNode.js";
+import { ChladniHotkeyData } from "./ChladniHotkeyData.js";
 import { ChladniRulerNode } from "./ChladniRulerNode.js";
 import { ChladniScreenSummaryContent } from "./ChladniScreenSummaryContent.js";
 import { createChladniTransform } from "./ChladniTransformFactory.js";
 import { ChladniVisualizationNode } from "./ChladniVisualizationNode.js";
 import { DisplacementColormapNode } from "./DisplacementColormapNode.js";
 import { ExcitationMarkerNode } from "./ExcitationMarkerNode.js";
+import { getMaterialStringProperty } from "./MaterialStrings.js";
 import { ModalShapeNode } from "./ModalShapeNode.js";
 import { ResonanceCurveNode } from "./ResonanceCurveNode.js";
 import { ResonanceSonification } from "./ResonanceSonification.js";
@@ -289,7 +303,7 @@ export class ChladniScreenView extends ScreenView {
     this.sonification.isAtResonanceProperty.lazyLink((isAtResonance) => {
       if (isAtResonance) {
         const frequency = toFixed(this.model.frequencyProperty.value, 0);
-        const alertString = a11y.resonancePeakAlertStringProperty.value.replace("{{frequency}}", frequency);
+        const alertString = StringUtils.fillIn(a11y.resonancePeakAlertStringProperty, { frequency: frequency });
         resonanceUtterance.alert = alertString;
         utteranceQueue.addToBack(resonanceUtterance);
       }
@@ -320,7 +334,9 @@ export class ChladniScreenView extends ScreenView {
 
     // Announce material changes
     this.model.materialProperty.lazyLink((material) => {
-      const alertString = a11y.materialChangedAlertStringProperty.value.replace("{{material}}", material.name);
+      const alertString = StringUtils.fillIn(a11y.materialChangedAlertStringProperty, {
+        material: getMaterialStringProperty(material),
+      });
       utteranceQueue.addToBack(
         new Utterance({
           alert: alertString,
@@ -331,71 +347,64 @@ export class ChladniScreenView extends ScreenView {
   }
 
   /**
-   * Set up keyboard controls for accessibility.
-   * - Space: Toggle play/pause
-   * - Left/Right arrows: Adjust frequency (10 Hz, Shift for 100 Hz)
-   * - Up/Down arrows: Adjust frequency (100 Hz, Shift for 500 Hz)
-   * - R: Reset all
-   * - Escape: Stop sweep if running
+   * Set up keyboard controls for accessibility. Bindings live in ChladniHotkeyData
+   * (shared with the keyboard-help dialog). The listener is global but targets this
+   * ScreenView, so scenery only enables it while this screen is displayed.
+   *
+   * Space and the arrow keys are skipped while a PDOM control has focus, because
+   * the focused control (button, slider, draggable) owns those keys.
    */
   private setupKeyboardControls(): void {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (this.shouldIgnoreChladniKeyboardEvent(event)) {
-        return;
-      }
+    KeyboardListener.createGlobal(this, {
+      keyStringProperties: HotkeyData.combineKeyStringProperties([
+        ChladniHotkeyData.PLAY_PAUSE,
+        ChladniHotkeyData.ADJUST_FREQUENCY,
+        ChladniHotkeyData.ADJUST_FREQUENCY_LARGE,
+        ChladniHotkeyData.RESET,
+        ChladniHotkeyData.STOP_SWEEP,
+      ]),
+      fireOnHold: true,
+      fire: (_event, keysPressed) => {
+        const focusOwnsKey = getPDOMFocusedNode() !== null;
 
-      const shiftPressed = event.shiftKey;
-
-      if (KeyboardUtils.isKeyEvent(event, KeyboardUtils.KEY_SPACE)) {
-        event.preventDefault();
-        this.model.isPlayingProperty.value = !this.model.isPlayingProperty.value;
-      } else if (KeyboardUtils.isArrowKey(event)) {
-        this.handleChladniArrowKeyFrequency(event, shiftPressed);
-      } else if (event.key.toLowerCase() === "r" && !event.ctrlKey) {
-        event.preventDefault();
-        this.model.reset();
-        this.reset();
-      } else if (KeyboardUtils.isKeyEvent(event, KeyboardUtils.KEY_ESCAPE) && this.model.isSweepingProperty.value) {
-        event.preventDefault();
-        this.model.stopSweep();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
+        if (ChladniHotkeyData.PLAY_PAUSE.hasKeyStroke(keysPressed)) {
+          if (!focusOwnsKey) {
+            this.model.isPlayingProperty.value = !this.model.isPlayingProperty.value;
+          }
+        } else if (
+          ChladniHotkeyData.ADJUST_FREQUENCY.hasKeyStroke(keysPressed) ||
+          ChladniHotkeyData.ADJUST_FREQUENCY_LARGE.hasKeyStroke(keysPressed)
+        ) {
+          if (!focusOwnsKey) {
+            this.handleChladniArrowKeyFrequency(keysPressed);
+          }
+        } else if (ChladniHotkeyData.RESET.hasKeyStroke(keysPressed)) {
+          this.model.reset();
+          this.reset();
+        } else if (ChladniHotkeyData.STOP_SWEEP.hasKeyStroke(keysPressed) && this.model.isSweepingProperty.value) {
+          this.model.stopSweep();
+        }
+      },
+    });
   }
 
   /**
-   * Returns true when the keyboard event should be ignored (input focus or interactive element focus).
+   * Adjust frequency in response to an arrow-key stroke (optionally with Shift).
    */
-  private shouldIgnoreChladniKeyboardEvent(event: KeyboardEvent): boolean {
-    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-      return true;
-    }
-
-    if (KeyboardUtils.isArrowKey(event)) {
-      const activeElement = document.activeElement;
-      return Boolean(activeElement && activeElement !== document.body && activeElement.tagName !== "BODY");
-    }
-
-    return false;
-  }
-
-  /**
-   * Adjust frequency in response to arrow-key presses.
-   */
-  private handleChladniArrowKeyFrequency(event: KeyboardEvent, shiftPressed: boolean): void {
+  private handleChladniArrowKeyFrequency(keysPressed: OneKeyStroke): void {
     if (this.model.isSweepActiveProperty.value) {
       return;
     }
-    event.preventDefault();
+    const shiftPressed = keysPressed.startsWith("shift+");
+    const key = shiftPressed ? keysPressed.slice("shift+".length) : keysPressed;
 
-    if (KeyboardUtils.isKeyEvent(event, KeyboardUtils.KEY_LEFT_ARROW)) {
+    if (key === "arrowLeft") {
       this.adjustFrequency(-(shiftPressed ? FREQUENCY_STEP_MEDIUM : FREQUENCY_STEP_SMALL));
-    } else if (KeyboardUtils.isKeyEvent(event, KeyboardUtils.KEY_RIGHT_ARROW)) {
+    } else if (key === "arrowRight") {
       this.adjustFrequency(shiftPressed ? FREQUENCY_STEP_MEDIUM : FREQUENCY_STEP_SMALL);
-    } else if (KeyboardUtils.isKeyEvent(event, KeyboardUtils.KEY_DOWN_ARROW)) {
+    } else if (key === "arrowDown") {
       this.adjustFrequency(-(shiftPressed ? FREQUENCY_STEP_LARGE : FREQUENCY_STEP_MEDIUM));
-    } else if (KeyboardUtils.isKeyEvent(event, KeyboardUtils.KEY_UP_ARROW)) {
+    } else if (key === "arrowUp") {
       this.adjustFrequency(shiftPressed ? FREQUENCY_STEP_LARGE : FREQUENCY_STEP_MEDIUM);
     }
   }

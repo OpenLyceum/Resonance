@@ -4,7 +4,6 @@
  * Control panel section for material selection in the Chladni plate visualization.
  */
 
-import type { TReadOnlyProperty } from "scenerystack/axon";
 import { type Node, Text, VBox } from "scenerystack/scenery";
 import type { ComboBoxItem } from "scenerystack/sun";
 import { ComboBox } from "scenerystack/sun";
@@ -12,17 +11,8 @@ import { ResonanceStrings } from "../../../i18n/ResonanceStrings.js";
 import ResonanceColors from "../../../ResonanceColors.js";
 import ResonanceConstants from "../../../ResonanceConstants.js";
 import type { ChladniModel } from "../../model/ChladniModel.js";
-import { MATERIALS, Material, type MaterialType } from "../../model/Material.js";
-
-/**
- * Map of material types to their string properties.
- */
-const MATERIAL_STRINGS = new Map<MaterialType, TReadOnlyProperty<string>>([
-  [Material.COPPER, ResonanceStrings.chladni.copperStringProperty],
-  [Material.ALUMINUM, ResonanceStrings.chladni.aluminumStringProperty],
-  [Material.ZINC, ResonanceStrings.chladni.zincStringProperty],
-  [Material.STAINLESS_STEEL, ResonanceStrings.chladni.stainlessSteelStringProperty],
-]);
+import { MATERIALS, type MaterialType } from "../../model/Material.js";
+import { getMaterialStringProperty } from "../MaterialStrings.js";
 
 export class MaterialSection extends VBox {
   public constructor(model: ChladniModel, comboBoxListParent: Node) {
@@ -36,8 +26,7 @@ export class MaterialSection extends VBox {
     const materialComboBoxItems: ComboBoxItem<MaterialType>[] = MATERIALS.map((material) => ({
       value: material,
       createNode: () => {
-        const stringProperty = MATERIAL_STRINGS.get(material) ?? ResonanceStrings.chladni.copperStringProperty;
-        return new Text(stringProperty, {
+        return new Text(getMaterialStringProperty(material), {
           font: ResonanceConstants.CONTROL_FONT,
         });
       },

@@ -14,11 +14,13 @@ import { ChartRectangle, ChartTransform, GridLineSet, LinePlot, TickLabelSet, Ti
 import { Bounds2, Range } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { Orientation } from "scenerystack/phet-core";
+import { StringUtils } from "scenerystack/phetcommon";
 import { Line, Node, Text } from "scenerystack/scenery";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import ResonanceColors from "../../ResonanceColors.js";
 import ResonanceConstants from "../../ResonanceConstants.js";
 import type { ChladniModel } from "../model/ChladniModel.js";
+import { createMaterialNameProperty } from "./MaterialStrings.js";
 
 // Chart dimensions
 const CHART_WIDTH = 220;
@@ -182,34 +184,40 @@ export class ResonanceCurveNode extends Node {
     this.ariaRole = "img";
     this.accessibleName = ResonanceStrings.chladni.a11y.resonanceCurveLabelStringProperty;
 
-    // Create dynamic description that updates with frequency and resonance state
+    // Dynamic description; follows frequency, material, resonance state and the locale
+    const a11yStrings = ResonanceStrings.chladni.a11y;
     const descriptionProperty = new DerivedProperty(
-      [model.frequencyProperty, model.materialProperty],
-      (frequency, material) => {
+      [
+        model.frequencyProperty,
+        createMaterialNameProperty(model.materialProperty),
+        a11yStrings.resonanceCurveDescriptionStringProperty,
+        a11yStrings.responseStrongPeakStringProperty,
+        a11yStrings.responseNearPeakStringProperty,
+        a11yStrings.responseModerateStringProperty,
+        a11yStrings.responseLowStringProperty,
+      ],
+      (frequency, materialName, pattern, strongPeak, nearPeak, moderate, low) => {
         const strength = model.strength(frequency);
         const maxStrength = this.estimateMaxStrengthInWindow();
         const normalizedStrength = maxStrength > 0 ? strength / maxStrength : 0;
-
         const windowRange = model.getGraphWindowRange();
-        const freqRounded = Math.round(frequency);
-        const minFreq = Math.round(windowRange.min);
-        const maxFreq = Math.round(windowRange.max);
 
-        let description = `Resonance curve graph for ${material.name} plate. `;
-        description += `Showing frequencies from ${minFreq} to ${maxFreq} Hz. `;
-        description += `Current frequency marker at ${freqRounded} Hz. `;
-
+        let response = low;
         if (normalizedStrength > 0.8) {
-          description += "At a strong resonance peak.";
+          response = strongPeak;
         } else if (normalizedStrength > 0.5) {
-          description += "Near a resonance peak.";
+          response = nearPeak;
         } else if (normalizedStrength > 0.2) {
-          description += "Moderate response level.";
-        } else {
-          description += "Low response level.";
+          response = moderate;
         }
 
-        return description;
+        return StringUtils.fillIn(pattern, {
+          material: materialName,
+          minFrequency: Math.round(windowRange.min),
+          maxFrequency: Math.round(windowRange.max),
+          frequency: Math.round(frequency),
+          response: response,
+        });
       },
     );
 

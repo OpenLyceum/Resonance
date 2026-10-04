@@ -11,7 +11,7 @@
  * - Uses ModelViewTransform2 for coordinate conversion
  */
 
-import { DerivedProperty, type Property } from "scenerystack/axon";
+import { PatternStringProperty, type Property } from "scenerystack/axon";
 import { Bounds2 } from "scenerystack/dot";
 import { optionize } from "scenerystack/phet-core";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -21,6 +21,7 @@ import { RendererType } from "../../preferences/RendererType.js";
 import ResonanceColors from "../../ResonanceColors.js";
 import type { ChladniModel } from "../model/ChladniModel.js";
 import { createChladniTransform } from "./ChladniTransformFactory.js";
+import { createMaterialNameProperty } from "./MaterialStrings.js";
 import { CanvasParticleRenderer, type ParticleRenderer, WebGLParticleRenderer } from "./renderers/index.js";
 
 type ChladniVisualizationNodeSelfOptions = {
@@ -144,17 +145,16 @@ export class ChladniVisualizationNode extends Node {
     this.ariaRole = "img";
     this.accessibleName = ResonanceStrings.chladni.a11y.visualizationLabelStringProperty;
 
-    // Create dynamic description that updates with model state
-    const descriptionProperty = new DerivedProperty(
-      [model.frequencyProperty, model.materialProperty, model.actualParticleCountProperty],
-      (frequency, material, particleCount) => {
-        return `Chladni plate visualization showing ${particleCount} particles on a ${material.name} plate at ${Math.round(frequency)} Hz. Particles gather along nodal lines where the plate has zero displacement.`;
+    // Dynamic description; follows the model state and the locale
+    this.descriptionContent = new PatternStringProperty(
+      ResonanceStrings.chladni.a11y.visualizationDescriptionStringProperty,
+      {
+        count: model.actualParticleCountProperty,
+        material: createMaterialNameProperty(model.materialProperty),
+        frequency: model.frequencyProperty,
       },
+      { maps: { frequency: (frequency: number) => Math.round(frequency) } },
     );
-
-    descriptionProperty.link((description) => {
-      this.descriptionContent = description;
-    });
   }
 
   /**

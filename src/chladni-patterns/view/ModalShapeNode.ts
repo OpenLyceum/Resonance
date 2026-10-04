@@ -15,6 +15,7 @@
 import { DerivedProperty, type Property } from "scenerystack/axon";
 import { Bounds2 } from "scenerystack/dot";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
+import { StringUtils } from "scenerystack/phetcommon";
 import { CanvasNode, type CanvasNodeOptions } from "scenerystack/scenery";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 
@@ -81,11 +82,10 @@ export class ModalShapeNode extends CanvasNode {
     this.accessibleName = ResonanceStrings.chladni.a11y.modalShapeLabelStringProperty;
 
     // Dynamic description that updates with mode selection
-    const descriptionProperty = new DerivedProperty([selectedModeProperty], (mode) => {
-      // Build description with mode values substituted
-      const template = ResonanceStrings.chladni.a11y.modalShapeDescriptionStringProperty.value;
-      return template.replace("{{m}}", mode.m.toString()).replace("{{n}}", mode.n.toString());
-    });
+    const descriptionProperty = new DerivedProperty(
+      [selectedModeProperty, ResonanceStrings.chladni.a11y.modalShapeDescriptionStringProperty],
+      (mode, pattern) => StringUtils.fillIn(pattern, { m: mode.m, n: mode.n }),
+    );
     this.descriptionContent = descriptionProperty;
     // Listen for visibility changes to trigger repaint when becoming visible
     this.visibleProperty.lazyLink((visible) => {

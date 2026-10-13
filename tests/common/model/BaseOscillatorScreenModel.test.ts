@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BaseOscillatorScreenModel } from "../../../src/common/model/BaseOscillatorScreenModel.js";
+import { ResonatorConfigMode } from "../../../src/common/model/ResonatorConfigMode.js";
 import { SolverType } from "../../../src/common/model/SolverType.js";
 import { ResonancePreferencesModel } from "../../../src/preferences/ResonancePreferencesModel.js";
 
@@ -58,4 +59,36 @@ describe("shared oscillator driver", () => {
       screen.stopSweep();
     }
   });
+});
+
+describe("BaseOscillatorScreenModel reset", () => {
+  it.each([ResonatorConfigMode.SAME_MASS, ResonatorConfigMode.CUSTOM])(
+    "restores constructor defaults after editing in %s mode",
+    (mode) => {
+      const model = new BaseOscillatorScreenModel(new ResonancePreferencesModel());
+      const initialMass = model.getMass(0);
+      const initialSpringConstant = model.getSpringConstant(0);
+      model.resonatorConfigProperty.value = mode;
+      model.resonatorCountProperty.value = 3;
+      model.selectedResonatorIndexProperty.value = 2;
+      model.resonanceModel.massProperty.value = 4;
+      model.resonanceModel.springConstantProperty.value = 150;
+      model.step(0.016);
+
+      model.reset();
+
+      expect(model.resonatorConfigProperty.value).toBe(ResonatorConfigMode.SAME_MASS);
+      expect(model.resonatorCountProperty.value).toBe(1);
+      expect(model.selectedResonatorIndexProperty.value).toBe(0);
+      expect(model.getMass(0)).toBe(initialMass);
+      expect(model.getSpringConstant(0)).toBe(initialSpringConstant);
+      expect(model.resonanceModel.timeProperty.value).toBe(0);
+
+      model.resonatorCountProperty.value = 3;
+      for (let i = 0; i < 3; i++) {
+        expect(model.getMass(i)).toBe(initialMass);
+        expect(model.getNaturalFrequencyHz(i)).toBeCloseTo(1 + (i / 2) * 4.5, 12);
+      }
+    },
+  );
 });

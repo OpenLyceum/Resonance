@@ -376,6 +376,8 @@ export class BaseOscillatorScreenModel {
     for (const model of this.resonatorModels) {
       model.reset();
     }
+    // Restore screen defaults after the individual models reset their parameters.
+    this.updateResonatorParameters(true);
   }
 
   public step(dt: number, forceStep: boolean = false): void {

@@ -1017,16 +1017,17 @@ export class ResonanceModel extends BaseModel {
    * Override of BaseModel.onSubStep to collect sub-step data.
    * Called at each sub-step during ODE integration.
    */
-  protected override onSubStep(state: number[]): void {
-    this.collectSubStepData(state);
+  protected override onSubStep(state: number[], elapsedTime: number): void {
+    this.collectSubStepData(state, elapsedTime);
   }
 
   /**
    * Collect a sub-step data point from the solver callback.
    * Called by BaseModel when sub-step collection is enabled.
    * @param state - The state vector [position, velocity, phase, ...]
+   * @param elapsedTime - Time elapsed since the start of the current step
    */
-  public collectSubStepData(state: number[]): void {
+  public collectSubStepData(state: number[], elapsedTime: number = 0): void {
     if (!this.subStepCollectionEnabled) {
       return;
     }
@@ -1046,7 +1047,7 @@ export class ResonanceModel extends BaseModel {
       (-k * position - this.dampingProperty.value * velocity - m * this.gravityProperty.value + appliedForce) / m;
 
     this.subStepDataBuffer.push({
-      time: this.timeProperty.value,
+      time: this.timeProperty.value + elapsedTime,
       position,
       velocity,
       acceleration,

@@ -18,6 +18,24 @@ function createMockPreferences() {
 }
 
 describe("ResonanceModel", () => {
+  it.each(Object.values(SolverType))("timestamps substeps across consecutive frames with %s", (solverType) => {
+    const model = new ResonanceModel({ solverTypeProperty: new Property<SolverType>(solverType) });
+    model.subStepCollectionEnabled = true;
+    model.positionProperty.value = 0.01;
+    let previousTime = 0;
+
+    for (let frame = 0; frame < 2; frame++) {
+      model.step(0.016);
+      const points = model.flushSubStepData();
+      expect(points.length).toBeGreaterThan(1);
+      for (const point of points) {
+        expect(point.time).toBeGreaterThan(previousTime);
+        previousTime = point.time;
+      }
+      expect(previousTime).toBeCloseTo(model.timeProperty.value, 12);
+    }
+  });
+
   let model: ResonanceModel;
 
   beforeEach(() => {

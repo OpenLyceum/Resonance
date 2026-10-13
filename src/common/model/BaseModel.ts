@@ -70,8 +70,8 @@ export abstract class BaseModel implements ODEModel {
     });
 
     // Bind sub-step callback once for performance
-    this.boundSubStepCallback = (_elapsedTime: number, state: number[]) => {
-      this.onSubStep(state);
+    this.boundSubStepCallback = (elapsedTime: number, state: number[]) => {
+      this.onSubStep(state, elapsedTime);
     };
   }
 
@@ -132,8 +132,9 @@ export abstract class BaseModel implements ODEModel {
    * Called at each sub-step during ODE integration.
    * Subclasses can override to collect high-resolution data for graph plotting.
    * @param state - The state vector at this sub-step
+   * @param elapsedTime - Time elapsed since the start of the current step
    */
-  protected onSubStep(_state: number[]): void {
+  protected onSubStep(_state: number[], _elapsedTime: number): void {
     // Default implementation does nothing
     // ResonanceModel overrides this to collect sub-step data
   }

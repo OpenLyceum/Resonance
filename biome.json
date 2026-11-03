@@ -200,6 +200,9 @@
           },
           "style": {
             "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noPlaywrightWaitForTimeout": "error"
           }
         }
       }

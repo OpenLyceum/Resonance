@@ -76,8 +76,10 @@ export const ResonanceStrings = {
 
 /**
  * @unused Not referenced in production code; only used in tests.
+ * @internal Exported for unit tests; not part of the application API.
  */
 export const resonanceStringManager = StringManager.getInstance();
 
+/** @internal Exported for unit tests; not part of the application API. */
 // Export StringManager for direct access when needed
 export { StringManager } from "./StringManager.js";

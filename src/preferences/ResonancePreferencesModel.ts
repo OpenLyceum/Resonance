@@ -16,7 +16,10 @@ import ResonanceNamespace from "../ResonanceNamespace.js";
 import { RendererType } from "./RendererType.js";
 import resonanceQueryParameters from "./resonanceQueryParameters.js";
 
-/** Shape of preferences as stored in localStorage (may be partial). */
+/**
+ * Shape of preferences as stored in localStorage (may be partial).
+ * @internal Exported for unit tests; not part of the application API.
+ */
 export interface StoredPreferences {
   showModalControls?: boolean;
   solverType?: SolverType;

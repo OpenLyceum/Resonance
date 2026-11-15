@@ -15,6 +15,7 @@ export type SolverType = (typeof SolverType)[keyof typeof SolverType];
 /**
  * Human-readable names for solver types (localized)
  * @unused Not referenced in production code; only used in tests.
+ * @internal Exported for unit tests; not part of the application API.
  */
 export const SolverTypeName: Record<SolverType, ReadOnlyProperty<string>> = {
   [SolverType.RUNGE_KUTTA_4]: ResonanceStrings.common.solverNames.solverRK4StringProperty,
@@ -25,6 +26,7 @@ export const SolverTypeName: Record<SolverType, ReadOnlyProperty<string>> = {
 /**
  * Human-readable descriptions for solver types (localized)
  * @unused Not referenced in production code; only used in tests.
+ * @internal Exported for unit tests; not part of the application API.
  */
 export const SolverTypeDescription: Record<SolverType, ReadOnlyProperty<string>> = {
   [SolverType.RUNGE_KUTTA_4]: ResonanceStrings.preferences.solvers.rk4DescriptionStringProperty,

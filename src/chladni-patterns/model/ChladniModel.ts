@@ -52,7 +52,7 @@ export { GRAIN_COUNT_OPTIONS } from "./ChladniConstants.js";
 /**
  * Valid time speed values for the Chladni simulation.
  */
-export const ChladniTimeSpeedValues = ["slow", "normal"] as const;
+const ChladniTimeSpeedValues = ["slow", "normal"] as const;
 export type ChladniTimeSpeed = (typeof ChladniTimeSpeedValues)[number];
 
 /**

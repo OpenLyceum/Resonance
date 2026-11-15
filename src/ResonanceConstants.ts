@@ -109,9 +109,6 @@ const RULER_TOP_MARGIN = 300;
 // ===== CONTROL PANEL =====
 
 const CONTROL_PANEL_CORNER_RADIUS = 8;
-
-/** Corner radius shared by themed panels (px). */
-export const PANEL_CORNER_RADIUS = CONTROL_PANEL_CORNER_RADIUS;
 const CONTROL_PANEL_LINE_WIDTH = 2;
 const CONTROL_PANEL_X_MARGIN = 10;
 const CONTROL_PANEL_Y_MARGIN = 10;

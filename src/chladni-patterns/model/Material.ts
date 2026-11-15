@@ -8,15 +8,11 @@
  * Values are based on physical material properties.
  */
 
-export interface MaterialProperties {
-  /** English identifier, not for display — use MaterialStrings for the localized name. */
-  readonly name: string;
-  readonly dispersionConstant: number;
-}
-
 /**
  * Available plate materials with their dispersion constants.
  * The dispersion constant affects how patterns form at different frequencies.
+ * Each entry has an English `name` (not for display — use MaterialStrings) and
+ * a `dispersionConstant`.
  */
 export const Material = {
   COPPER: {

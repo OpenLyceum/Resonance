@@ -17,7 +17,7 @@ import { BooleanProperty, DerivedProperty, StringUnionProperty, type TReadOnlyPr
 /**
  * Valid playback state values.
  */
-export const PlaybackStateValues = ["idle", "playing", "sweeping", "paused_sweeping"] as const;
+const PlaybackStateValues = ["idle", "playing", "sweeping", "paused_sweeping"] as const;
 
 /**
  * Possible playback states for the simulation.

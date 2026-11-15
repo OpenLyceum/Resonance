@@ -5,8 +5,6 @@
  * Extracted from ChladniModel for better organization and reusability.
  */
 
-import { Range } from "scenerystack/dot";
-
 // ============================================================================
 // MATHEMATICAL CONSTANTS
 // ============================================================================
@@ -28,7 +26,7 @@ export const DEFAULT_PLATE_HEIGHT = 0.32; // meters
 /**
  * Plate size constraints
  */
-export const MIN_PLATE_SIZE_RATIO = 0.5;
+const MIN_PLATE_SIZE_RATIO = 0.5;
 export const MIN_PLATE_WIDTH = DEFAULT_PLATE_WIDTH * MIN_PLATE_SIZE_RATIO;
 export const MIN_PLATE_HEIGHT = DEFAULT_PLATE_HEIGHT * MIN_PLATE_SIZE_RATIO;
 
@@ -45,48 +43,12 @@ export const DAMPING_COEFFICIENT = 0.02;
 export const FREQUENCY_MIN = 50;
 export const FREQUENCY_MAX = 4000;
 export const FREQUENCY_DEFAULT = 500;
-export const FREQUENCY_RANGE = new Range(FREQUENCY_MIN, FREQUENCY_MAX);
 
 /**
- * Frequency sweep rate options (Hz per second).
- * Full range is 3950 Hz (50-4000).
- *
- * - SLOW (33 Hz/s): ~120 second sweep, ideal for detailed observation of pattern formation
- * - NORMAL (66 Hz/s): ~60 second sweep, good balance of speed and observation time
- * - FAST (132 Hz/s): ~30 second sweep, for quick overview of all resonance patterns
+ * Frequency sweep rate (Hz per second).
+ * Full range is 3950 Hz (50-4000) → ~60 second sweep at 66 Hz/s.
  */
-export const SWEEP_RATE_SLOW = 33;
-export const SWEEP_RATE_NORMAL = 66;
-export const SWEEP_RATE_FAST = 132;
-
-/**
- * Sweep rate option type for configuration
- */
-export type SweepRateOption = {
-  readonly value: number;
-  readonly name: string;
-};
-
-/**
- * Available sweep rate options
- */
-export const SWEEP_RATE_OPTIONS: readonly SweepRateOption[] = [
-  { value: SWEEP_RATE_SLOW, name: "slow" },
-  { value: SWEEP_RATE_NORMAL, name: "normal" },
-  { value: SWEEP_RATE_FAST, name: "fast" },
-] as const;
-
-/**
- * Default sweep rate index in SWEEP_RATE_OPTIONS array
- */
-export const DEFAULT_SWEEP_RATE_INDEX = 1; // Normal (66 Hz/s)
-export const DEFAULT_SWEEP_RATE = SWEEP_RATE_OPTIONS[DEFAULT_SWEEP_RATE_INDEX]!;
-
-/**
- * Legacy constant for backward compatibility
- * @deprecated Use SWEEP_RATE_OPTIONS or DEFAULT_SWEEP_RATE instead
- */
-export const SWEEP_RATE = SWEEP_RATE_NORMAL;
+export const SWEEP_RATE = 66;
 
 // ============================================================================
 // MODAL CALCULATION PARAMETERS
@@ -236,71 +198,5 @@ export const GRAIN_COUNT_OPTIONS: readonly GrainCountOption[] = [
 /**
  * Default grain count index in GRAIN_COUNT_OPTIONS array
  */
-export const DEFAULT_GRAIN_COUNT_INDEX = 2; // 10,000
+const DEFAULT_GRAIN_COUNT_INDEX = 2; // 10,000
 export const DEFAULT_GRAIN_COUNT = GRAIN_COUNT_OPTIONS[DEFAULT_GRAIN_COUNT_INDEX]!;
-
-// ============================================================================
-// CONVENIENCE EXPORTS
-// ============================================================================
-
-/**
- * All Chladni constants bundled together for convenient importing
- */
-const ChladniConstants = {
-  // Math
-  TWO_PI,
-
-  // Plate dimensions
-  DEFAULT_PLATE_WIDTH,
-  DEFAULT_PLATE_HEIGHT,
-  MIN_PLATE_SIZE_RATIO,
-  MIN_PLATE_WIDTH,
-  MIN_PLATE_HEIGHT,
-
-  // Damping
-  DAMPING_COEFFICIENT,
-
-  // Frequency
-  FREQUENCY_MIN,
-  FREQUENCY_MAX,
-  FREQUENCY_DEFAULT,
-  FREQUENCY_RANGE,
-  SWEEP_RATE,
-  SWEEP_RATE_SLOW,
-  SWEEP_RATE_NORMAL,
-  SWEEP_RATE_FAST,
-  SWEEP_RATE_OPTIONS,
-  DEFAULT_SWEEP_RATE_INDEX,
-  DEFAULT_SWEEP_RATE,
-
-  // Modal calculation
-  MAX_MODE,
-  MODE_STEP,
-  SOURCE_THRESHOLD,
-  SOURCE_THRESHOLD_SQUARED,
-  NORMALIZATION_NUMERATOR,
-
-  // Particle animation
-  PARTICLE_STEP_SCALE,
-  STEP_TIME_SCALE,
-  TARGET_FPS,
-
-  // Excitation
-  DEFAULT_EXCITATION_X,
-  DEFAULT_EXCITATION_Y,
-
-  // Graph
-  GRAPH_WINDOW_WIDTH,
-  CURVE_SAMPLES_PER_HZ,
-  TOTAL_CURVE_SAMPLES,
-
-  // Boundary
-  DEFAULT_BOUNDARY_MODE,
-
-  // Grain count
-  GRAIN_COUNT_OPTIONS,
-  DEFAULT_GRAIN_COUNT_INDEX,
-  DEFAULT_GRAIN_COUNT,
-} as const;
-
-export default ChladniConstants;

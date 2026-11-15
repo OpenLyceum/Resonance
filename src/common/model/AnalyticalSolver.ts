@@ -23,7 +23,7 @@ import { type ODEModel, ODESolver, type SubStepCallback } from "./ODESolver.js";
  * Extended model interface for direct parameter access.
  * ResonanceModel already satisfies this — no changes needed there.
  */
-export interface AnalyticalODEModel extends ODEModel {
+interface AnalyticalODEModel extends ODEModel {
   readonly massProperty: { readonly value: number };
   readonly springConstantProperty: { readonly value: number };
   readonly dampingProperty: { readonly value: number };

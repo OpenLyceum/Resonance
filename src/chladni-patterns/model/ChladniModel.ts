@@ -310,7 +310,7 @@ export class ChladniModel {
    * Step the simulation forward by dt seconds.
    * The dt is scaled by the current time speed multiplier.
    */
-  public step(dt: number): void {
+  public step(dt: number, forceStep: boolean = false): void {
     // Note: Frequency sweep is now handled automatically by Animation in the sweep controller.
     // The animation runs independently and notifies completion via sweepCompletedEmitter.
 
@@ -319,7 +319,7 @@ export class ChladniModel {
     const adjustedDt = dt * TIME_SPEED_MULTIPLIERS[speed];
 
     // Delegate particle stepping to particle manager
-    this.particleManager.step(adjustedDt, (x, y) => this.psi(x, y));
+    this.particleManager.step(adjustedDt, (x, y) => this.psi(x, y), forceStep);
   }
 
   /**

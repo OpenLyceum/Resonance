@@ -610,7 +610,7 @@ export class ChladniScreenView extends ScreenView {
       stepForwardButtonOptions: {
         listener: () => {
           // Step the model forward by a fixed amount
-          this.model.step(ResonanceConstants.STEP_DT);
+          this.model.step(ResonanceConstants.STEP_DT, true);
           this.visualizationNode.update();
         },
       },

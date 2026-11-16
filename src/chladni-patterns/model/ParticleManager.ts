@@ -147,8 +147,8 @@ export class ParticleManager {
    * @param dt - Time step in seconds
    * @param psiFunction - Function that returns displacement at (x, y)
    */
-  public step(dt: number, psiFunction: DisplacementFunction): void {
-    if (!this.isPlayingProperty.value) {
+  public step(dt: number, psiFunction: DisplacementFunction, forceStep: boolean = false): void {
+    if (!(this.isPlayingProperty.value || forceStep)) {
       return;
     }
 

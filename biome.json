@@ -64,7 +64,8 @@
         "noFloatingPromises": "error",
         "noMisusedPromises": "error",
         "useAwaitThenable": "error",
-        "useExplicitType": "warn"
+        "useExplicitType": "warn",
+        "useExhaustiveSwitchCases": "warn"
       },
       "performance": {
         "noAccumulatingSpread": "warn",
@@ -142,7 +143,9 @@
         "useShorthandFunctionType": "warn",
         "useSpreadOverApply": "warn",
         "useThrowNewError": "error",
-        "useThrowOnlyError": "error"
+        "useThrowOnlyError": "error",
+        "useReadonlyClassProperties": "warn",
+        "useConsistentArrayType": "warn"
       },
       "suspicious": {
         "noConsole": "warn",
@@ -157,13 +160,15 @@
         "useAwait": "error",
         "useErrorMessage": "error",
         "useGuardForIn": "error",
-        "useIsArray": "error"
+        "useIsArray": "error",
+        "noEvolvingTypes": "warn"
       }
     }
   },
   "overrides": [
     {
       "includes": ["src/**"],
+      "plugins": ["./biome-plugins/no-native-tofixed.grit"],
       "linter": {
         "rules": {
           "nursery": {

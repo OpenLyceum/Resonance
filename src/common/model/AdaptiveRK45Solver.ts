@@ -10,10 +10,10 @@
 import { type ODEModel, ODESolver, type SubStepCallback } from "./ODESolver.js";
 
 export class AdaptiveRK45Solver extends ODESolver {
-  private maxTimestep: number = 0.01;
-  private minTimestep: number = 0.00001;
-  private errorTolerance: number = 0.0001;
-  private safetyFactor: number = 0.9;
+  private readonly maxTimestep: number = 0.01;
+  private readonly minTimestep: number = 0.00001;
+  private readonly errorTolerance: number = 0.0001;
+  private readonly safetyFactor: number = 0.9;
 
   // Dormand-Prince coefficients
   private readonly a = [0, 1 / 5, 3 / 10, 4 / 5, 8 / 9, 1, 1];

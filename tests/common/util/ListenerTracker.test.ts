@@ -10,7 +10,7 @@ import { ListenerTracker } from "../../../src/common/util/ListenerTracker.js";
 // Mock Property implementation for testing
 class MockProperty<T> {
   private _value: T;
-  private listeners: Set<(value: T) => void> = new Set();
+  private readonly listeners: Set<(value: T) => void> = new Set();
 
   constructor(initialValue: T) {
     this._value = initialValue;

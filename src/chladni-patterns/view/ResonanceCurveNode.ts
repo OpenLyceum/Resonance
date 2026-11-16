@@ -40,10 +40,10 @@ export class ResonanceCurveNode extends Node {
   private readonly chartRectangle: ChartRectangle;
 
   // Grid and tick elements
-  private verticalGridLines: GridLineSet;
-  private horizontalGridLines: GridLineSet;
-  private xTickMarks: TickMarkSet;
-  private xTickLabels: TickLabelSet;
+  private readonly verticalGridLines: GridLineSet;
+  private readonly horizontalGridLines: GridLineSet;
+  private readonly xTickMarks: TickMarkSet;
+  private readonly xTickLabels: TickLabelSet;
 
   // Hz label
   private readonly hzLabel: Text;

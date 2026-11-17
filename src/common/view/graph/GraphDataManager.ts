@@ -28,6 +28,9 @@ export class GraphDataManager {
   private readonly linePlot: LinePlot;
   private readonly trailNode: Node;
   private readonly trailLength: number = 5;
+  // Fixed pool of trail dots, built once and repositioned on every update. Rebuilding
+  // Circles per data point would link a new listener on the global color Property each frame.
+  private readonly trailCircles: Circle[];
   private isManuallyZoomed: boolean = false;
 
   // Grid and tick components
@@ -48,6 +51,11 @@ export class GraphDataManager {
     this.chartTransform = chartTransform;
     this.linePlot = linePlot;
     this.trailNode = trailNode;
+    this.trailCircles = Array.from(
+      { length: this.trailLength },
+      () => new Circle(1, { fill: ResonanceColors.plot1Property, visible: false }),
+    );
+    this.trailNode.children = this.trailCircles;
     this.maxDataPoints = maxDataPoints;
     this.verticalGridLineSet = gridConfig.verticalGridLineSet;
     this.horizontalGridLineSet = gridConfig.horizontalGridLineSet;
@@ -136,7 +144,9 @@ export class GraphDataManager {
     this.updateTickSpacing(defaultRange, defaultRange);
 
     // Clear trail
-    this.trailNode.removeAllChildren();
+    for (const circle of this.trailCircles) {
+      circle.visible = false;
+    }
 
     // Reset zoom state
     this.isManuallyZoomed = false;
@@ -239,51 +249,31 @@ export class GraphDataManager {
    * Update the trail visualization showing the most recent points
    */
   public updateTrail(): void {
-    // Clear existing trail circles
-    this.trailNode.removeAllChildren();
-
-    // Get the last N points (up to trailLength)
+    // Show the last N points (up to trailLength); hide any unused pool entries
     const numTrailPoints = Math.min(this.trailLength, this.dataPoints.length);
-    if (numTrailPoints === 0) {
-      return;
-    }
-
-    // Start from the most recent points
     const startIndex = this.dataPoints.length - numTrailPoints;
 
-    for (let i = 0; i < numTrailPoints; i++) {
-      const point = this.dataPoints[startIndex + i];
+    this.trailCircles.forEach((circle, i) => {
+      const point = i < numTrailPoints ? this.dataPoints[startIndex + i] : undefined;
       if (!point) {
-        continue;
+        circle.visible = false;
+        return;
       }
 
-      // Calculate the age of this point (0 = oldest in trail, numTrailPoints-1 = newest)
-      const age = i;
-      const fraction = age / (numTrailPoints - 1 || 1); // 0 to 1, where 1 is newest
+      // Age of this point: 0 = oldest in trail, 1 = newest
+      const fraction = i / (numTrailPoints - 1 || 1);
 
       // Size and opacity increase with recency
-      // Oldest point: small and transparent
-      // Newest point: large and opaque
       const minRadius = 3;
       const maxRadius = 5;
-      const radius = minRadius + (maxRadius - minRadius) * fraction;
-
       const minOpacity = 0.2;
       const maxOpacity = 0.8;
-      const opacity = minOpacity + (maxOpacity - minOpacity) * fraction;
 
-      // Transform model coordinates to view coordinates
-      const viewPosition = this.chartTransform.modelToViewPosition(point);
-
-      // Create circle for this trail point
-      const circle = new Circle(radius, {
-        fill: ResonanceColors.plot1Property,
-        opacity: opacity,
-        center: viewPosition,
-      });
-
-      this.trailNode.addChild(circle);
-    }
+      circle.radius = minRadius + (maxRadius - minRadius) * fraction;
+      circle.opacity = minOpacity + (maxOpacity - minOpacity) * fraction;
+      circle.center = this.chartTransform.modelToViewPosition(point);
+      circle.visible = true;
+    });
   }
 
   /**

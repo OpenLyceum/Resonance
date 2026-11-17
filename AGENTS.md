@@ -58,6 +58,8 @@ via `StringManager.getA11yStrings()`.
 - **Template drift (Baton `check-template-drift.sh`):** `biome.json` turns off `noNonNullAssertion` (below).
 - **Biome `style.noNonNullAssertion: off`:** Chladni WebGL/canvas particle paths use intentional
   non-null assertions; enabling the rule floods lint without improving safety here.
+- `memory-leak:ParticleCanvasNode` — no dispose() of its own; file-private CanvasNode inside CanvasParticleRenderer.
+- `memory-leak:WebGLParticleRenderer` — Sprites WebGL path needs a real WebGL context unavailable in vitest/happy-dom.
 
 ## Testing
 

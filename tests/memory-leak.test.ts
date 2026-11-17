@@ -2,9 +2,17 @@
  * Fleet-standard memory-leak regression suite.
  */
 
-import { NumberProperty } from "scenerystack/axon";
+import { BooleanProperty, NumberProperty, Property } from "scenerystack/axon";
+import { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { describe, expect, it } from "vitest";
+import { ChladniModel } from "../src/chladni-patterns/model/ChladniModel.js";
+import { ChladniVisualizationNode } from "../src/chladni-patterns/view/ChladniVisualizationNode.js";
+import { CanvasParticleRenderer } from "../src/chladni-patterns/view/renderers/CanvasParticleRenderer.js";
+import { ResonanceModel } from "../src/common/model/ResonanceModel.js";
+import { SolverType } from "../src/common/model/SolverType.js";
 import { ListenerTracker } from "../src/common/util/ListenerTracker.js";
+import { RendererType } from "../src/preferences/RendererType.js";
+import { OscillatorVectorNode } from "../src/single-oscillator/view/OscillatorVectorNode.js";
 import { describeDisposalLeaks, forceGC } from "./helpers/memoryLeak.js";
 
 function createAndDispose(): WeakRef<object> {
@@ -44,4 +52,42 @@ describe("Memory leak regression", () => {
   });
 });
 
-describeDisposalLeaks([{ name: "ListenerTracker", create: () => new ListenerTracker() }]);
+const transform = ModelViewTransform2.createIdentity();
+const chladniModel = new ChladniModel();
+const canvasRendererTypeProperty = new Property<RendererType>(RendererType.CANVAS);
+const resonanceModel = new ResonanceModel({
+  solverTypeProperty: new Property<SolverType>(SolverType.RUNGE_KUTTA_4),
+});
+const velocityVisibleProperty = new BooleanProperty(true);
+const accelerationVisibleProperty = new BooleanProperty(true);
+const appliedForceVisibleProperty = new BooleanProperty(true);
+
+describeDisposalLeaks([
+  { name: "ListenerTracker", create: () => new ListenerTracker() },
+  {
+    name: "CanvasParticleRenderer",
+    create: () => new CanvasParticleRenderer(200, 200, transform),
+    keepAlive: () => [transform],
+  },
+  {
+    name: "ChladniVisualizationNode",
+    create: () => new ChladniVisualizationNode(chladniModel, canvasRendererTypeProperty, { visualizationSize: 200 }),
+    keepAlive: () => [chladniModel, canvasRendererTypeProperty],
+  },
+  {
+    name: "OscillatorVectorNode",
+    create: () =>
+      new OscillatorVectorNode(resonanceModel, transform, {
+        velocityVisibleProperty,
+        accelerationVisibleProperty,
+        appliedForceVisibleProperty,
+      }),
+    keepAlive: () => [
+      resonanceModel,
+      transform,
+      velocityVisibleProperty,
+      accelerationVisibleProperty,
+      appliedForceVisibleProperty,
+    ],
+  },
+]);

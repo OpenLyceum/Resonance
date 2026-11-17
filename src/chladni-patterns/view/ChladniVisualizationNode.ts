@@ -11,7 +11,7 @@
  * - Uses ModelViewTransform2 for coordinate conversion
  */
 
-import { PatternStringProperty, type Property } from "scenerystack/axon";
+import { PatternStringProperty, type Property, type TReadOnlyProperty } from "scenerystack/axon";
 import { Bounds2 } from "scenerystack/dot";
 import { optionize } from "scenerystack/phet-core";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
@@ -19,6 +19,7 @@ import { Node, type NodeOptions, Rectangle } from "scenerystack/scenery";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import { RendererType } from "../../preferences/RendererType.js";
 import ResonanceColors from "../../ResonanceColors.js";
+import type { BoundaryMode } from "../model/ChladniConstants.js";
 import type { ChladniModel } from "../model/ChladniModel.js";
 import { createChladniTransform } from "./ChladniTransformFactory.js";
 import { createMaterialNameProperty } from "./MaterialStrings.js";
@@ -53,6 +54,17 @@ export class ChladniVisualizationNode extends Node {
   // Particle renderer (strategy pattern)
   private particleRenderer: ParticleRenderer | null = null;
   private currentRendererType: RendererType;
+
+  private readonly rendererTypeProperty: Property<RendererType>;
+  private readonly boundaryModeListener: (mode: BoundaryMode) => void;
+  private readonly rendererTypeListener: (newRenderer: RendererType) => void;
+  private readonly particleColorListener: () => void;
+  private readonly descriptionProperty: PatternStringProperty<{
+    count: TReadOnlyProperty<number>;
+    material: TReadOnlyProperty<string>;
+    frequency: TReadOnlyProperty<number>;
+  }>;
+  private readonly materialNameProperty: TReadOnlyProperty<string> & { dispose(): void };
 
   public constructor(
     model: ChladniModel,
@@ -122,22 +134,27 @@ export class ChladniVisualizationNode extends Node {
     this.addChild(this.borderRect);
     this.addChild(this.innerBorderRect);
 
+    this.rendererTypeProperty = rendererTypeProperty;
+
     // Link inner border visibility to boundary mode
-    model.boundaryModeProperty.link((mode) => {
+    this.boundaryModeListener = (mode) => {
       this.innerBorderRect.visible = mode === "clamp";
-    });
+    };
+    model.boundaryModeProperty.link(this.boundaryModeListener);
 
     // Listen for renderer type changes
-    rendererTypeProperty.link((newRenderer) => {
+    this.rendererTypeListener = (newRenderer) => {
       if (newRenderer !== this.currentRendererType) {
         this.switchRenderer(newRenderer);
       }
-    });
+    };
+    rendererTypeProperty.link(this.rendererTypeListener);
 
     // Update renderer when particle color changes
-    ResonanceColors.chladniParticleProperty.link(() => {
+    this.particleColorListener = () => {
       this.particleRenderer?.onColorChange();
-    });
+    };
+    ResonanceColors.chladniParticleProperty.link(this.particleColorListener);
 
     // --- Accessibility (PDOM) Setup ---
     // Make the visualization accessible to screen readers
@@ -146,15 +163,19 @@ export class ChladniVisualizationNode extends Node {
     this.accessibleName = ResonanceStrings.chladni.a11y.visualizationLabelStringProperty;
 
     // Dynamic description; follows the model state and the locale
-    this.descriptionContent = new PatternStringProperty(
+    this.materialNameProperty = createMaterialNameProperty(model.materialProperty) as TReadOnlyProperty<string> & {
+      dispose(): void;
+    };
+    this.descriptionProperty = new PatternStringProperty(
       ResonanceStrings.chladni.a11y.visualizationDescriptionStringProperty,
       {
         count: model.actualParticleCountProperty,
-        material: createMaterialNameProperty(model.materialProperty),
+        material: this.materialNameProperty,
         frequency: model.frequencyProperty,
       },
       { maps: { frequency: (frequency: number) => Math.round(frequency) } },
     );
+    this.descriptionContent = this.descriptionProperty;
   }
 
   /**
@@ -260,6 +281,11 @@ export class ChladniVisualizationNode extends Node {
    * Dispose of the visualization node and its renderer.
    */
   public override dispose(): void {
+    this.model.boundaryModeProperty.unlink(this.boundaryModeListener);
+    this.rendererTypeProperty.unlink(this.rendererTypeListener);
+    ResonanceColors.chladniParticleProperty.unlink(this.particleColorListener);
+    this.descriptionProperty.dispose();
+    this.materialNameProperty.dispose();
     this.particleRenderer?.dispose();
     super.dispose();
   }

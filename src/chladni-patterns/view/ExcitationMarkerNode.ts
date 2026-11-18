@@ -6,7 +6,7 @@
  * Extracted from ChladniScreenView for better separation of concerns.
  */
 
-import { Property } from "scenerystack/axon";
+import { DerivedProperty, Property } from "scenerystack/axon";
 import { Bounds2, Matrix3, Transform3, Vector2 } from "scenerystack/dot";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Circle, Node, RichDragListener, Voicing } from "scenerystack/scenery";
@@ -167,19 +167,11 @@ export class ExcitationMarkerNode extends VoicingNode {
       viewDragBoundsProperty.value = createViewDragBounds();
     });
 
-    const createModelDragBounds = () => {
-      const halfWidth = this.model.plateWidth / 2;
-      const halfHeight = this.model.plateHeight / 2;
-      return new Bounds2(-halfWidth, -halfHeight, halfWidth, halfHeight);
-    };
-    const modelDragBoundsProperty = new Property(createModelDragBounds());
-
-    this.model.plateWidthProperty.link(() => {
-      modelDragBoundsProperty.value = createModelDragBounds();
-    });
-    this.model.plateHeightProperty.link(() => {
-      modelDragBoundsProperty.value = createModelDragBounds();
-    });
+    // Keyboard drag stays on the plate, which is centered on the model origin.
+    const modelDragBoundsProperty = new DerivedProperty(
+      [this.model.plateWidthProperty, this.model.plateHeightProperty],
+      (width, height) => new Bounds2(-width / 2, -height / 2, width / 2, height / 2),
+    );
 
     // Invert Y for keyboard drag: model coords use +Y up, screen uses +Y down.
     const invertYTransform = new Transform3(Matrix3.scaling(1, -1));

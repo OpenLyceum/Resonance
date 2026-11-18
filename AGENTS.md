@@ -55,7 +55,6 @@ via `StringManager.getA11yStrings()`.
 - **Biome `style.noNonNullAssertion` scoped off** (via `biome.json` `overrides`, an allowed template extend): ODE solvers
   (`AdaptiveRK45Solver`, `AnalyticalSolver`, `ResonanceModel`, `RungeKuttaSolver`) and `src/chladni-patterns/**`
   keep intentional non-null assertions in dense numeric / WebGL paths.
-- `memory-leak:ParticleCanvasNode` — no dispose() of its own; file-private CanvasNode inside CanvasParticleRenderer.
 - `memory-leak:WebGLParticleRenderer` — Sprites WebGL path needs a real WebGL context unavailable in vitest/happy-dom.
 
 ## Testing

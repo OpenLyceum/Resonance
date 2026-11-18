@@ -78,7 +78,11 @@ export class OscillatorControlPanel extends Panel {
   public readonly traceEnabledProperty: Property<boolean>;
 
   private readonly model: BaseOscillatorScreenModel;
-  private readonly listenerTracker = new ListenerTracker();
+  // Links to Properties the panel does not own, including those made by the static builders.
+  private readonly listenerTracker: ListenerTracker;
+  // Every node the panel builds, including those left out of the tree in the current mode
+  // and the combo-box list parents, so dispose() releases their string and a11y links.
+  private readonly ownedNodes: readonly Node[];
   private readonly displayMassProperty: NumberProperty;
   private readonly displaySpringConstantProperty: NumberProperty;
 
@@ -129,6 +133,7 @@ export class OscillatorControlPanel extends Panel {
 
     // Store model reference for use in methods
     const tempModel = model;
+    const listenerTracker = new ListenerTracker();
 
     // --- Create all controls using extracted methods ---
 
@@ -163,7 +168,10 @@ export class OscillatorControlPanel extends Panel {
     configBox.visible = tempModel.resonatorCountProperty.value > 1;
     configBoxStrut.visible = !configBox.visible;
 
-    const { resonatorSelectionBox } = OscillatorControlPanel.createResonatorSelectionControls(tempModel);
+    const { resonatorSelectionBox } = OscillatorControlPanel.createResonatorSelectionControls(
+      tempModel,
+      listenerTracker,
+    );
 
     const { massControl, springConstantControl, displayMassProperty, displaySpringConstantProperty } =
       OscillatorControlPanel.createMassSpringControls(tempModel);
@@ -175,11 +183,15 @@ export class OscillatorControlPanel extends Panel {
 
     const gravityBox = OscillatorControlPanel.createGravityToggle(gravityEnabledProperty);
 
-    const rulerCheckbox = OscillatorControlPanel.createRulerCheckbox(rulerVisibleProperty);
+    const rulerCheckbox = OscillatorControlPanel.createRulerCheckbox(rulerVisibleProperty, listenerTracker);
 
-    const gridCheckbox = OscillatorControlPanel.createGridCheckbox(gridVisibleProperty);
+    const gridCheckbox = OscillatorControlPanel.createGridCheckbox(gridVisibleProperty, listenerTracker);
 
-    const traceCheckbox = OscillatorControlPanel.createTraceCheckbox(traceEnabledProperty, gridVisibleProperty);
+    const traceCheckbox = OscillatorControlPanel.createTraceCheckbox(
+      traceEnabledProperty,
+      gridVisibleProperty,
+      listenerTracker,
+    );
 
     // --- Create sub-panel for mass/spring/resonator/frequency controls ---
     // Use a light blue color to contrast with the green main panel
@@ -251,6 +263,17 @@ export class OscillatorControlPanel extends Panel {
 
     // Store references for instance methods
     this.model = model;
+    this.listenerTracker = listenerTracker;
+    this.ownedNodes = [
+      controlPanelContent,
+      presetBox,
+      resonatorCountControl,
+      configBoxContainer,
+      resonatorSelectionBox,
+      traceCheckbox,
+      comboBoxListParent,
+      presetComboBoxListParent,
+    ];
     this.comboBoxListParent = comboBoxListParent;
     this.presetComboBoxListParent = presetComboBoxListParent;
     this.gravityEnabledProperty = gravityEnabledProperty;
@@ -458,7 +481,10 @@ export class OscillatorControlPanel extends Panel {
   /**
    * Creates the resonator selection spinner and label.
    */
-  private static createResonatorSelectionControls(model: BaseOscillatorScreenModel): {
+  private static createResonatorSelectionControls(
+    model: BaseOscillatorScreenModel,
+    listenerTracker: ListenerTracker,
+  ): {
     resonatorSelectionBox: HBox;
     displayResonatorNumberProperty: NumberProperty;
   } {
@@ -467,12 +493,12 @@ export class OscillatorControlPanel extends Panel {
     displayResonatorNumberProperty.link((displayNumber: number) => {
       model.selectedResonatorIndexProperty.value = displayNumber - 1;
     });
-    model.selectedResonatorIndexProperty.link((index: number) => {
+    listenerTracker.link(model.selectedResonatorIndexProperty, (index: number) => {
       displayResonatorNumberProperty.value = index + 1;
     });
 
     const spinnerRangeProperty = new Property(new Range(1, model.resonatorCountProperty.value));
-    model.resonatorCountProperty.link((count: number) => {
+    listenerTracker.link(model.resonatorCountProperty, (count: number) => {
       spinnerRangeProperty.value = new Range(1, count);
     });
 
@@ -614,7 +640,10 @@ export class OscillatorControlPanel extends Panel {
   /**
    * Creates the ruler visibility checkbox with voicing support.
    */
-  private static createRulerCheckbox(rulerVisibleProperty: Property<boolean>): Checkbox {
+  private static createRulerCheckbox(
+    rulerVisibleProperty: Property<boolean>,
+    listenerTracker: ListenerTracker,
+  ): Checkbox {
     const checkbox = new Checkbox(
       rulerVisibleProperty,
       new Text(ResonanceStrings.controls.rulerStringProperty, {
@@ -634,7 +663,7 @@ export class OscillatorControlPanel extends Panel {
     );
 
     // Announce visibility changes via voicing
-    rulerVisibleProperty.lazyLink((visible: boolean) => {
+    listenerTracker.lazyLink(rulerVisibleProperty, (visible: boolean) => {
       const alerts = ResonanceStrings.a11y.alerts;
       const announcement = visible ? alerts.rulerShownStringProperty.value : alerts.rulerHiddenStringProperty.value;
       voicingUtteranceQueue.addToBack(announcement);
@@ -646,7 +675,10 @@ export class OscillatorControlPanel extends Panel {
   /**
    * Creates the grid visibility checkbox with a grid icon and voicing support.
    */
-  private static createGridCheckbox(gridVisibleProperty: Property<boolean>): Checkbox {
+  private static createGridCheckbox(
+    gridVisibleProperty: Property<boolean>,
+    listenerTracker: ListenerTracker,
+  ): Checkbox {
     // Use GridIcon instead of text - color adapts to color profile
     const gridIcon = new GridIcon({
       size: 24,
@@ -666,7 +698,7 @@ export class OscillatorControlPanel extends Panel {
     });
 
     // Announce visibility changes via voicing
-    gridVisibleProperty.lazyLink((visible: boolean) => {
+    listenerTracker.lazyLink(gridVisibleProperty, (visible: boolean) => {
       const gridAlerts = ResonanceStrings.a11y.alerts;
       const announcement = visible
         ? gridAlerts.gridShownStringProperty.value
@@ -685,6 +717,7 @@ export class OscillatorControlPanel extends Panel {
   private static createTraceCheckbox(
     traceEnabledProperty: Property<boolean>,
     gridVisibleProperty: Property<boolean>,
+    listenerTracker: ListenerTracker,
   ): Checkbox {
     const checkbox = new Checkbox(
       traceEnabledProperty,
@@ -704,7 +737,7 @@ export class OscillatorControlPanel extends Panel {
 
     // Disable the trace checkbox when grid is not visible.
     // When grid becomes hidden, also turn off trace.
-    gridVisibleProperty.link((gridVisible: boolean) => {
+    listenerTracker.link(gridVisibleProperty, (gridVisible: boolean) => {
       checkbox.enabled = gridVisible;
       checkbox.opacity = gridVisible ? 1 : SceneryConstants.DISABLED_OPACITY;
       if (!gridVisible) {
@@ -713,7 +746,7 @@ export class OscillatorControlPanel extends Panel {
     });
 
     // Announce trace state changes via voicing
-    traceEnabledProperty.lazyLink((enabled: boolean) => {
+    listenerTracker.lazyLink(traceEnabledProperty, (enabled: boolean) => {
       const traceAlerts = ResonanceStrings.a11y.alerts;
       const announcement = enabled
         ? traceAlerts.traceStartedStringProperty.value
@@ -850,5 +883,12 @@ export class OscillatorControlPanel extends Panel {
   public override dispose(): void {
     this.listenerTracker.dispose();
     super.dispose();
+    // Panel.dispose() does not dispose its content. The controls link to sim-lifetime
+    // string, accessible-name and model Properties.
+    for (const node of this.ownedNodes) {
+      if (!node.isDisposed) {
+        node.disposeSubtree();
+      }
+    }
   }
 }

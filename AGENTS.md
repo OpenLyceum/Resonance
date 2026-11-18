@@ -51,8 +51,6 @@ via `StringManager.getA11yStrings()`.
 ## Compliance carve-outs
 
 - **Root constants:** `src/ResonanceConstants.ts`; domain-specific `ChladniConstants` stays under chladni-patterns.
-- **Hardcoded colors:** near-invisible `rgba(0,0,0,0.01)` hit-target fill in `ChladniScreenView.ts`
-  (interaction surface, not themed chrome).
 - **Domain clock:** `BaseModel` / Chladni playback state machines own play/pause and stepping instead of composing fleet-standard `TimeModel`.
 - **Template drift (Baton `check-template-drift.sh`):** `biome.json` turns off `noNonNullAssertion` (below).
 - **Biome `style.noNonNullAssertion: off`:** Chladni WebGL/canvas particle paths use intentional

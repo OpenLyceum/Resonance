@@ -25,6 +25,7 @@ import { Shape } from "scenerystack/kite";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { type ModelViewTransform2, StringUtils } from "scenerystack/phetcommon";
 import {
+  Color,
   getPDOMFocusedNode,
   HBox,
   HotkeyData,
@@ -485,7 +486,7 @@ export class ChladniScreenView extends ScreenView {
   private createResizeHandle(): Node {
     // Larger invisible hit area for easier grabbing
     const hitArea = new Rectangle(0, 0, RESIZE_HANDLE_HIT_AREA, RESIZE_HANDLE_HIT_AREA, {
-      fill: "rgba(0,0,0,0.01)", // Nearly invisible but still catches events
+      fill: Color.TRANSPARENT,
       cursor: "nwse-resize",
     });
 

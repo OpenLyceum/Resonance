@@ -528,8 +528,13 @@ export class BaseOscillatorScreenView extends ScreenView {
   protected updateResonatorVisibility(count: number): void {
     for (let i = 0; i < this.springNodes.length; i++) {
       const visible = i < count;
-      this.springNodes[i]!.visible = visible;
-      this.massNodes[i]!.visible = visible;
+      const springNode = this.springNodes[i];
+      const massNode = this.massNodes[i];
+      if (springNode === undefined || massNode === undefined) {
+        continue;
+      }
+      springNode.visible = visible;
+      massNode.visible = visible;
     }
   }
 
@@ -623,12 +628,17 @@ export class BaseOscillatorScreenView extends ScreenView {
       // Convert mass position to view using transform directly
       const massBottomViewY = this.modelViewTransform.modelToViewY(massModelY);
 
+      const massNode = this.massNodes[i];
+      const springNode = this.springNodes[i];
+      if (massNode === undefined || springNode === undefined) {
+        continue;
+      }
+
       // Position mass node (local origin is at bottom of mass box)
-      this.massNodes[i]!.x = xCenter;
-      this.massNodes[i]!.y = massBottomViewY;
+      massNode.x = xCenter;
+      massNode.y = massBottomViewY;
 
       // Configure spring
-      const springNode = this.springNodes[i]!;
       const loopsTimesRadius = ResonanceConstants.SPRING_LOOPS * ResonanceConstants.SPRING_RADIUS;
 
       // Spring length in view - use absolute value for rendering
@@ -725,8 +735,11 @@ export class BaseOscillatorScreenView extends ScreenView {
       initiallyVisible = false,
     } = options;
 
-    const initialXProperty = plottableProperties[initialXIndex]!;
-    const initialYProperty = plottableProperties[initialYIndex]!;
+    const initialXProperty = plottableProperties[initialXIndex];
+    const initialYProperty = plottableProperties[initialYIndex];
+    if (initialXProperty === undefined || initialYProperty === undefined) {
+      throw new Error("plottableProperties indices out of range");
+    }
 
     const comboBoxListParent = new Node();
 

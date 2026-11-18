@@ -52,9 +52,9 @@ via `StringManager.getA11yStrings()`.
 
 - **Root constants:** `src/ResonanceConstants.ts`; domain-specific `ChladniConstants` stays under chladni-patterns.
 - **Domain clock:** `BaseModel` / Chladni playback state machines own play/pause and stepping instead of composing fleet-standard `TimeModel`.
-- **Template drift (Baton `check-template-drift.sh`):** `biome.json` turns off `noNonNullAssertion` (below).
-- **Biome `style.noNonNullAssertion: off`:** Chladni WebGL/canvas particle paths use intentional
-  non-null assertions; enabling the rule floods lint without improving safety here.
+- **Biome `style.noNonNullAssertion` scoped off** (via `biome.json` `overrides`, an allowed template extend): ODE solvers
+  (`AdaptiveRK45Solver`, `AnalyticalSolver`, `ResonanceModel`, `RungeKuttaSolver`) and `src/chladni-patterns/**`
+  keep intentional non-null assertions in dense numeric / WebGL paths.
 - `memory-leak:ParticleCanvasNode` — no dispose() of its own; file-private CanvasNode inside CanvasParticleRenderer.
 - `memory-leak:WebGLParticleRenderer` — Sprites WebGL path needs a real WebGL context unavailable in vitest/happy-dom.
 

@@ -83,7 +83,6 @@
         "noCommonJs": "error",
         "noDefaultExport": "off",
         "noExportedImports": "warn",
-        "noNonNullAssertion": "off",
         "noParameterAssign": "error",
         "preset": "recommended",
         "useBlockStatements": "error",
@@ -216,6 +215,22 @@
           },
           "suspicious": {
             "noPlaywrightWaitForTimeout": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/common/model/AdaptiveRK45Solver.ts",
+        "src/common/model/AnalyticalSolver.ts",
+        "src/common/model/ResonanceModel.ts",
+        "src/common/model/RungeKuttaSolver.ts",
+        "src/chladni-patterns/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
           }
         }
       }

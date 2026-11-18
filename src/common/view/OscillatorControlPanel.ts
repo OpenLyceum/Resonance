@@ -310,7 +310,10 @@ export class OscillatorControlPanel extends Panel {
     const displayPresets = OscillatorControlPanel.DISPLAY_PRESETS;
 
     // Default to "Heavy and Slow"
-    const defaultPreset = displayPresets.find((p) => p.nameKey === "lightAndBouncy") ?? displayPresets[0]!;
+    const defaultPreset = displayPresets.find((p) => p.nameKey === "lightAndBouncy") ?? displayPresets[0];
+    if (defaultPreset === undefined) {
+      throw new Error("DISPLAY_PRESETS must be non-empty");
+    }
 
     const presetProperty = new Property<ResonancePreset>(defaultPreset);
 

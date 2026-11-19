@@ -89,6 +89,7 @@ export class ConfigurableGraph extends Node {
   // Module instances
   private readonly dataManager: GraphDataManager;
   private readonly interactionHandler: GraphInteractionHandler;
+  private readonly controlsPanel: GraphControlsPanel;
 
   // Control buttons
   private readonly rescaleButton: Node;
@@ -273,6 +274,8 @@ export class ConfigurableGraph extends Node {
       this.yPropertyProperty,
       this.graphWidth,
     );
+
+    this.controlsPanel = controlsPanel;
 
     // Create title panel with combo boxes for axis selection
     const titlePanel = controlsPanel.createTitlePanel(listParent);
@@ -621,6 +624,21 @@ export class ConfigurableGraph extends Node {
 
     // Clear all data
     this.clearData();
+  }
+
+  public override dispose(): void {
+    this.interactionHandler.dispose();
+    this.controlsPanel.dispose();
+    this.headerBar.dispose();
+    // The control buttons link to sim-lifetime accessible-name Properties.
+    this.controlButtonsPanel.disposeSubtree();
+    this.graphVisibleProperty.dispose();
+    this.isDraggingProperty.dispose();
+    this.isResizingProperty.dispose();
+    // Last: the combo boxes above were listening to these.
+    this.xPropertyProperty.dispose();
+    this.yPropertyProperty.dispose();
+    super.dispose();
   }
 }
 

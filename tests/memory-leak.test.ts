@@ -5,6 +5,7 @@
 import { BooleanProperty, NumberProperty, Property } from "scenerystack/axon";
 import { Bounds2 } from "scenerystack/dot";
 import { ModelViewTransform2 } from "scenerystack/phetcommon";
+import { Node } from "scenerystack/scenery";
 import { describe, expect, it } from "vitest";
 import { ChladniModel } from "../src/chladni-patterns/model/ChladniModel.js";
 import { ChladniVisualizationNode } from "../src/chladni-patterns/view/ChladniVisualizationNode.js";
@@ -12,11 +13,14 @@ import { CanvasParticleRenderer } from "../src/chladni-patterns/view/renderers/C
 import { ResonanceModel } from "../src/common/model/ResonanceModel.js";
 import { SolverType } from "../src/common/model/SolverType.js";
 import { ListenerTracker } from "../src/common/util/ListenerTracker.js";
+import { ConfigurableGraph } from "../src/common/view/graph/ConfigurableGraph.js";
+import type { PlottableProperty } from "../src/common/view/graph/PlottableProperty.js";
 import { OscillatorControlPanel } from "../src/common/view/OscillatorControlPanel.js";
 import { ResonanceStrings } from "../src/i18n/ResonanceStrings.js";
 import { MultipleOscillatorsModel } from "../src/multiple-oscillators/model/MultipleOscillatorsModel.js";
 import { RendererType } from "../src/preferences/RendererType.js";
 import { ResonancePreferencesModel } from "../src/preferences/ResonancePreferencesModel.js";
+import ResonanceColors from "../src/ResonanceColors.js";
 import { SingleOscillatorModel } from "../src/single-oscillator/model/SingleOscillatorModel.js";
 import { OscillatorVectorNode } from "../src/single-oscillator/view/OscillatorVectorNode.js";
 import { describeDisposalLeaks, expectNoListenerGrowth, forceGC } from "./helpers/memoryLeak.js";
@@ -172,5 +176,39 @@ describe("OscillatorControlPanel", () => {
       rulerVisibleProperty.value = !rulerVisibleProperty.value;
       panel.dispose();
     });
+  });
+});
+
+describe("ConfigurableGraph", () => {
+  it("dispose() releases every sim-lifetime Property it listened to, and never links its data", async () => {
+    const timeProperty = new Property(0);
+    const displacementProperty = new Property(1);
+    const plottables: PlottableProperty[] = [
+      { name: "Time", property: timeProperty, unit: "s" },
+      { name: "Displacement", property: displacementProperty, unit: "m" },
+    ];
+    const [first, second] = plottables;
+    if (!(first && second)) {
+      throw new Error("expected two plottable properties");
+    }
+    // A screen's combo-box list parent outlives the graph, as in BaseOscillatorScreenView.
+    const listParent = new Node();
+
+    await expectNoListenerGrowth(
+      [
+        ResonanceColors.controlPanelFillProperty,
+        ResonanceStrings.controls.graphTitleOpenStringProperty,
+        ResonanceStrings.controls.graphVsStringProperty,
+        ResonanceStrings.controls.graphTitleCloseStringProperty,
+      ],
+      () => {
+        const graph = new ConfigurableGraph(plottables, first, second, 300, 200, listParent);
+        // The axis Properties are sampled on demand, never linked.
+        expect(timeProperty.hasListeners()).toBe(false);
+        expect(displacementProperty.hasListeners()).toBe(false);
+        graph.dispose();
+      },
+    );
+    expect(listParent.children.length).toBe(0);
   });
 });

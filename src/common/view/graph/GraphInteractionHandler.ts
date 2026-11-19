@@ -10,10 +10,24 @@
 import type { BooleanProperty } from "scenerystack/axon";
 import type { ChartRectangle, ChartTransform, TickLabelSet } from "scenerystack/bamboo";
 import { Range, Vector2 } from "scenerystack/dot";
-import { DragListener, type Node, type Pointer, Rectangle, RichDragListener } from "scenerystack/scenery";
+import {
+  DragListener,
+  type Node,
+  type Pointer,
+  Rectangle,
+  RichDragListener,
+  type TInputListener,
+} from "scenerystack/scenery";
 import ResonanceColors from "../../../ResonanceColors.js";
 import ResonanceNamespace from "../../../ResonanceNamespace.js";
 import type { GraphDataManager } from "./GraphDataManager.js";
+
+/**
+ * Smallest finger separation (view px) used as a pinch-zoom divisor. Two fingers
+ * that meet would otherwise divide by zero and push an infinite range into the
+ * chart transform.
+ */
+const MIN_PINCH_DISTANCE = 1;
 
 /**
  * Configuration for the chart and its data management
@@ -65,6 +79,12 @@ export class GraphInteractionHandler {
 
   // For resize
   private readonly resizeHandles: Rectangle[] = [];
+
+  /**
+   * Every input listener this handler attached, with the node it went on, so
+   * {@link dispose} can take them all off again.
+   */
+  private readonly attachedListeners: { node: Node; listener: TInputListener }[] = [];
   private readonly isResizingProperty: BooleanProperty;
   private readonly onResize: (width: number, height: number) => void;
 
@@ -96,6 +116,32 @@ export class GraphInteractionHandler {
   }
 
   /**
+   * Attach an input listener and remember it, so {@link dispose} can take it
+   * off again.
+   */
+  private attach(node: Node, listener: TInputListener): void {
+    node.addInputListener(listener);
+    this.attachedListeners.push({ node: node, listener: listener });
+  }
+
+  /**
+   * Detach every listener this handler added, dispose the ones that own
+   * resources (drag listeners), and dispose the resize handles.
+   */
+  public dispose(): void {
+    for (const { node, listener } of this.attachedListeners) {
+      node.removeInputListener(listener);
+      (listener as { dispose?: () => void }).dispose?.();
+    }
+    this.attachedListeners.length = 0;
+
+    for (const handle of this.resizeHandles) {
+      handle.dispose();
+    }
+    this.resizeHandles.length = 0;
+  }
+
+  /**
    * Initialize all interaction handlers
    */
   public initialize(): void {
@@ -112,7 +158,7 @@ export class GraphInteractionHandler {
    */
   private setupZoomControls(): void {
     // Mouse wheel zoom on the chart area
-    this.chartRectangle.addInputListener({
+    this.attach(this.chartRectangle, {
       wheel: (event) => {
         event.handle();
         const delta = event.domEvent?.deltaY;
@@ -133,7 +179,7 @@ export class GraphInteractionHandler {
     });
 
     // Double-click to reset to auto-scale
-    this.chartRectangle.addInputListener({
+    this.attach(this.chartRectangle, {
       down: (event) => {
         if (event.domEvent && event.domEvent.detail === 2) {
           // Double click detected
@@ -224,7 +270,7 @@ export class GraphInteractionHandler {
       },
     });
 
-    this.chartRectangle.addInputListener(dragListener);
+    this.attach(this.chartRectangle, dragListener);
     this.chartRectangle.cursor = "move";
 
     // Keyboard pan: arrow keys translate the chart model ranges.
@@ -243,7 +289,7 @@ export class GraphInteractionHandler {
     let initialXRange: Range | null = null;
     let initialYRange: Range | null = null;
 
-    this.chartRectangle.addInputListener({
+    this.attach(this.chartRectangle, {
       down: (event) => {
         // Only track touch events (not mouse)
         if (event.pointer.type === "touch") {
@@ -283,7 +329,7 @@ export class GraphInteractionHandler {
             const currentDistance = point0.distance(point1);
 
             // Calculate zoom factor from distance ratio
-            const zoomFactor = initialDistance / currentDistance;
+            const zoomFactor = initialDistance / Math.max(currentDistance, MIN_PINCH_DISTANCE);
 
             // Convert initial midpoint to model coordinates
             const initialModelCenter = this.chartTransform.viewToModelPosition(initialMidpoint);
@@ -349,7 +395,7 @@ export class GraphInteractionHandler {
     let initialYRange: Range | null = null;
     let singleTouchStartY: number | null = null;
 
-    this.yAxisInteractionRegion.addInputListener({
+    this.attach(this.yAxisInteractionRegion, {
       down: (event) => {
         if (event.pointer.type === "touch") {
           const globalPoint = event.pointer.point;
@@ -404,7 +450,7 @@ export class GraphInteractionHandler {
             const currentYDistance = Math.abs(point0.y - point1.y);
 
             // Calculate zoom factor from Y-distance ratio
-            const zoomFactor = initialYDistance / currentYDistance;
+            const zoomFactor = initialYDistance / Math.max(currentYDistance, MIN_PINCH_DISTANCE);
 
             // Convert initial midpoint Y to model coordinates
             const viewMidpoint = new Vector2(this.graphWidth / 2, initialYMidpoint);
@@ -487,14 +533,14 @@ export class GraphInteractionHandler {
       },
     });
 
-    this.yAxisInteractionRegion.addInputListener(mouseDragListener);
+    this.attach(this.yAxisInteractionRegion, mouseDragListener);
 
     // Make Y-axis interaction region pickable so it can receive input
     this.yAxisInteractionRegion.pickable = true;
     this.yAxisInteractionRegion.cursor = "ns-resize";
 
     // Add mouse wheel support for Y-axis zooming (zoom vertically only)
-    this.yAxisInteractionRegion.addInputListener({
+    this.attach(this.yAxisInteractionRegion, {
       wheel: (event) => {
         event.handle();
         const delta = event.domEvent?.deltaY;
@@ -539,7 +585,7 @@ export class GraphInteractionHandler {
     let initialXRange: Range | null = null;
     let singleTouchStartX: number | null = null;
 
-    this.xAxisInteractionRegion.addInputListener({
+    this.attach(this.xAxisInteractionRegion, {
       down: (event) => {
         if (event.pointer.type === "touch") {
           const globalPoint = event.pointer.point;
@@ -594,7 +640,7 @@ export class GraphInteractionHandler {
             const currentXDistance = Math.abs(point0.x - point1.x);
 
             // Calculate zoom factor from X-distance ratio
-            const zoomFactor = initialXDistance / currentXDistance;
+            const zoomFactor = initialXDistance / Math.max(currentXDistance, MIN_PINCH_DISTANCE);
 
             // Convert initial midpoint X to model coordinates
             const viewMidpoint = new Vector2(initialXMidpoint, this.graphHeight / 2);
@@ -677,14 +723,14 @@ export class GraphInteractionHandler {
       },
     });
 
-    this.xAxisInteractionRegion.addInputListener(mouseDragListener);
+    this.attach(this.xAxisInteractionRegion, mouseDragListener);
 
     // Make X-axis interaction region pickable so it can receive input
     this.xAxisInteractionRegion.pickable = true;
     this.xAxisInteractionRegion.cursor = "ew-resize";
 
     // Add mouse wheel support for X-axis zooming (zoom horizontally only)
-    this.xAxisInteractionRegion.addInputListener({
+    this.attach(this.xAxisInteractionRegion, {
       wheel: (event) => {
         event.handle();
         const delta = event.domEvent?.deltaY;
@@ -748,7 +794,7 @@ export class GraphInteractionHandler {
       },
     });
 
-    this.headerBar.addInputListener(dragListener);
+    this.attach(this.headerBar, dragListener);
   }
 
   /**
@@ -861,7 +907,7 @@ export class GraphInteractionHandler {
       },
     });
 
-    handle.addInputListener(dragListener);
+    this.attach(handle, dragListener);
   }
 
   /**

@@ -33,6 +33,13 @@ export class GraphControlsPanel {
   private readonly yPropertyProperty: Property<PlottableProperty>;
   private readonly graphWidth: number;
 
+  /**
+   * Nodes and derived Properties this panel builds that listen to something
+   * outliving the graph (localized strings, global colors, the combo-box list
+   * parent), released in {@link dispose}.
+   */
+  private readonly disposables: { dispose(): void }[] = [];
+
   public constructor(
     availableProperties: PlottableProperty[],
     xPropertyProperty: Property<PlottableProperty>,
@@ -113,18 +120,21 @@ export class GraphControlsPanel {
       fill: ResonanceColors.textProperty,
     });
 
-    const vsText = new Text(
-      new DerivedProperty([ResonanceStrings.controls.graphVsStringProperty], (vs: string) => ` ${vs} `),
-      {
-        font: TITLE_FONT,
-        fill: ResonanceColors.textProperty,
-      },
+    const paddedVsProperty = new DerivedProperty(
+      [ResonanceStrings.controls.graphVsStringProperty],
+      (vs: string) => ` ${vs} `,
     );
+    const vsText = new Text(paddedVsProperty, {
+      font: TITLE_FONT,
+      fill: ResonanceColors.textProperty,
+    });
 
     const rightParen = new Text(ResonanceStrings.controls.graphTitleCloseStringProperty, {
       font: TITLE_FONT,
       fill: ResonanceColors.textProperty,
     });
+
+    this.disposables.push(xComboBox, yComboBox, leftParen, vsText, rightParen, paddedVsProperty);
 
     // Arrange in horizontal layout: (Y vs X)
     return new HBox({
@@ -157,7 +167,19 @@ export class GraphControlsPanel {
       },
     );
 
+    // The fill darkens a global color Property, so it has to be let go of
+    // explicitly; otherwise every graph ever built stays on its listener list.
+    this.disposables.push(headerFillProperty);
+
     return headerBar;
+  }
+
+  /** Release the combo boxes, title text and derived Properties built above. */
+  public dispose(): void {
+    for (const disposable of this.disposables) {
+      disposable.dispose();
+    }
+    this.disposables.length = 0;
   }
 
   /**

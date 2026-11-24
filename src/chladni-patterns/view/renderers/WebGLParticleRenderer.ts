@@ -59,7 +59,10 @@ export class WebGLParticleRenderer implements ParticleRenderer {
     canvas.width = size;
     canvas.height = size;
 
-    const context = canvas.getContext("2d")!;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("A 2D canvas context is required to create particle sprites.");
+    }
     const color = ResonanceColors.chladniParticleProperty.value;
 
     // Draw a filled circle
@@ -76,7 +79,7 @@ export class WebGLParticleRenderer implements ParticleRenderer {
   /**
    * Ensure we have the correct number of sprite instances.
    */
-  private syncSpriteInstances(particleCount: number): boolean {
+  private syncSpriteInstances(particleCount: number, sprite: Sprite): boolean {
     if (this.spriteInstances.length === particleCount) {
       return false;
     }
@@ -87,7 +90,7 @@ export class WebGLParticleRenderer implements ParticleRenderer {
     // Create new instances
     for (let i = 0; i < particleCount; i++) {
       const instance = SpriteInstance.pool.fetch();
-      instance.sprite = this.sprite!;
+      instance.sprite = sprite;
       instance.transformType = SpriteInstanceTransformType.TRANSLATION;
       instance.alpha = 1.0;
       instance.matrix.setToIdentity();
@@ -101,13 +104,17 @@ export class WebGLParticleRenderer implements ParticleRenderer {
    * Recreate the sprites node (needed when instances change).
    */
   private recreateSpritesNode(): void {
+    const sprite = this.sprite;
+    if (sprite === null) {
+      return;
+    }
     // Remove old sprites node from container
     if (this.spritesNode) {
       this.containerNode.removeChild(this.spritesNode);
     }
 
     this.spritesNode = new Sprites({
-      sprites: [this.sprite!],
+      sprites: [sprite],
       spriteInstances: this.spriteInstances,
       canvasBounds: new Bounds2(0, 0, this.width, this.height),
       hitTestSprites: false,
@@ -122,8 +129,12 @@ export class WebGLParticleRenderer implements ParticleRenderer {
   }
 
   public update(particles: Vector2[], transform: ModelViewTransform2): void {
+    const sprite = this.sprite;
+    if (sprite === null) {
+      return;
+    }
     // Sync instance count
-    const needsRecreate = this.syncSpriteInstances(particles.length);
+    const needsRecreate = this.syncSpriteInstances(particles.length, sprite);
     if (needsRecreate) {
       this.recreateSpritesNode();
     }

@@ -27,6 +27,8 @@ export interface StoredPreferences {
 }
 
 const STORAGE_KEY = "resonance-preferences";
+const SOLVER_TYPES = Object.values(SolverType);
+const RENDERER_TYPES = Object.values(RendererType);
 
 export class ResonancePreferencesModel {
   public readonly solverTypeProperty: StringUnionProperty<SolverType>;
@@ -34,18 +36,21 @@ export class ResonancePreferencesModel {
   public readonly rendererTypeProperty: StringUnionProperty<RendererType>;
 
   public constructor(tandem?: Tandem) {
-    this.solverTypeProperty = new StringUnionProperty<SolverType>(resonanceQueryParameters.solverType as SolverType, {
-      validValues: Object.values(SolverType),
-      ...(tandem ? { tandem: tandem.createTandem("solverTypeProperty") } : {}),
-    });
+    this.solverTypeProperty = new StringUnionProperty<SolverType>(
+      SOLVER_TYPES.find((type) => type === resonanceQueryParameters.solverType) ?? SolverType.RUNGE_KUTTA_4,
+      {
+        validValues: SOLVER_TYPES,
+        ...(tandem ? { tandem: tandem.createTandem("solverTypeProperty") } : {}),
+      },
+    );
     this.showModalControlsProperty = new BooleanProperty(
       resonanceQueryParameters.showModalControls,
       tandem ? { tandem: tandem.createTandem("showModalControlsProperty") } : undefined,
     );
     this.rendererTypeProperty = new StringUnionProperty<RendererType>(
-      resonanceQueryParameters.rendererType as RendererType,
+      RENDERER_TYPES.find((type) => type === resonanceQueryParameters.rendererType) ?? RendererType.CANVAS,
       {
-        validValues: Object.values(RendererType),
+        validValues: RENDERER_TYPES,
         ...(tandem ? { tandem: tandem.createTandem("rendererTypeProperty") } : {}),
       },
     );
@@ -59,17 +64,24 @@ export class ResonancePreferencesModel {
   private loadPreferences(): void {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const preferences = JSON.parse(saved) as StoredPreferences;
+      const preferences: unknown = saved === null ? null : JSON.parse(saved);
+      if (preferences === null || typeof preferences !== "object") {
+        return;
+      }
 
-        if (preferences.solverType) {
-          this.solverTypeProperty.value = preferences.solverType;
+      if ("solverType" in preferences) {
+        const solver = SOLVER_TYPES.find((type) => type === preferences.solverType);
+        if (solver !== undefined) {
+          this.solverTypeProperty.value = solver;
         }
-        if (preferences.showModalControls !== undefined) {
-          this.showModalControlsProperty.value = preferences.showModalControls;
-        }
-        if (preferences.rendererType) {
-          this.rendererTypeProperty.value = preferences.rendererType;
+      }
+      if ("showModalControls" in preferences && typeof preferences.showModalControls === "boolean") {
+        this.showModalControlsProperty.value = preferences.showModalControls;
+      }
+      if ("rendererType" in preferences) {
+        const renderer = RENDERER_TYPES.find((type) => type === preferences.rendererType);
+        if (renderer !== undefined) {
+          this.rendererTypeProperty.value = renderer;
         }
       }
     } catch {

@@ -1107,9 +1107,7 @@ export type ResonancePreset = {
  * Get the localized name for a preset
  */
 export function getPresetName(preset: ResonancePreset): ReadOnlyProperty<string> {
-  const propertyName = `${preset.nameKey}StringProperty`;
-  const presetsMap = ResonanceStrings.presets as Record<string, ReadOnlyProperty<string>>;
-  return presetsMap[propertyName]!;
+  return ResonanceStrings.presets[`${preset.nameKey}StringProperty`];
 }
 
 /**

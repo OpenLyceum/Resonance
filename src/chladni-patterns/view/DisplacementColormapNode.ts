@@ -164,7 +164,10 @@ class ColormapCanvasNode extends CanvasNode {
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = sampleWidth;
     tempCanvas.height = sampleHeight;
-    const tempCtx = tempCanvas.getContext("2d")!;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) {
+      return;
+    }
     tempCtx.putImageData(this.imageData, 0, 0);
 
     // Draw scaled up with smoothing disabled for pixelated look,

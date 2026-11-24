@@ -148,6 +148,19 @@ describe("ResonancePreferencesModel", () => {
       expect(model.rendererTypeProperty.value).toBe("canvas");
     });
 
+    it("loads valid preferences independently of invalid fields", () => {
+      mockStorage["resonance-preferences"] = JSON.stringify({
+        solverType: "unknown-solver",
+        showModalControls: "false",
+        rendererType: "webgl",
+      });
+
+      const model = new ResonancePreferencesModel();
+      expect(model.solverTypeProperty.value).toBe(SolverType.RUNGE_KUTTA_4);
+      expect(model.showModalControlsProperty.value).toBe(false);
+      expect(model.rendererTypeProperty.value).toBe("webgl");
+    });
+
     it("should use defaults when localStorage is empty", () => {
       // mockStorage is empty by default
 

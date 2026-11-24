@@ -220,7 +220,10 @@ export class ModalShapeNode extends CanvasNode {
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = sampleWidth;
     tempCanvas.height = sampleHeight;
-    const tempCtx = tempCanvas.getContext("2d")!;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) {
+      return;
+    }
     tempCtx.putImageData(this.imageData, 0, 0);
 
     // Draw scaled up with smoothing for a smoother appearance

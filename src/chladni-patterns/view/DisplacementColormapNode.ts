@@ -10,7 +10,7 @@
  * Red = positive displacement (upward)
  */
 
-import { Bounds2 } from "scenerystack/dot";
+import { Bounds2, roundSymmetric } from "scenerystack/dot";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { CanvasNode, type CanvasNodeOptions } from "scenerystack/scenery";
 import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
@@ -86,8 +86,8 @@ class ColormapCanvasNode extends CanvasNode {
       // Blue to White (negative displacement)
       const t = 1 + d; // 0 to 1 as d goes from -1 to 0
       return [
-        Math.round(t * 255), // R: 0 -> 255
-        Math.round(t * 255), // G: 0 -> 255
+        roundSymmetric(t * 255), // R: 0 -> 255
+        roundSymmetric(t * 255), // G: 0 -> 255
         255, // B: always 255
       ];
     } else {
@@ -95,8 +95,8 @@ class ColormapCanvasNode extends CanvasNode {
       const t = 1 - d; // 1 to 0 as d goes from 0 to 1
       return [
         255, // R: always 255
-        Math.round(t * 255), // G: 255 -> 0
-        Math.round(t * 255), // B: 255 -> 0
+        roundSymmetric(t * 255), // G: 255 -> 0
+        roundSymmetric(t * 255), // B: 255 -> 0
       ];
     }
   }
@@ -148,7 +148,7 @@ class ColormapCanvasNode extends CanvasNode {
     }
 
     // Second pass: convert to colors
-    const alpha = Math.round(COLORMAP_OPACITY * 255);
+    const alpha = roundSymmetric(COLORMAP_OPACITY * 255);
     for (let i = 0; i < displacements.length; i++) {
       const normalized = displacements[i]! / maxDisplacement;
       const [r, g, b] = this.displacementToColor(normalized);

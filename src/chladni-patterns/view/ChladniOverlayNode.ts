@@ -6,6 +6,7 @@
  */
 
 import { NumberProperty, PatternStringProperty, type TReadOnlyProperty } from "scenerystack/axon";
+import { roundSymmetric } from "scenerystack/dot";
 import { Node } from "scenerystack/scenery";
 
 /**
@@ -52,8 +53,8 @@ export abstract class ChladniOverlayNode extends Node {
     this.visualizationHeight = visualizationHeight;
     this.plateWidthMeters = plateWidthMeters;
     this.plateHeightMeters = plateHeightMeters;
-    this.plateWidthCmProperty = new NumberProperty(Math.round(plateWidthMeters * 100));
-    this.plateHeightCmProperty = new NumberProperty(Math.round(plateHeightMeters * 100));
+    this.plateWidthCmProperty = new NumberProperty(roundSymmetric(plateWidthMeters * 100));
+    this.plateHeightCmProperty = new NumberProperty(roundSymmetric(plateHeightMeters * 100));
 
     this.create();
   }
@@ -115,8 +116,8 @@ export abstract class ChladniOverlayNode extends Node {
     this.visualizationHeight = visualizationHeight;
     this.plateWidthMeters = plateWidthMeters;
     this.plateHeightMeters = plateHeightMeters;
-    this.plateWidthCmProperty.value = Math.round(plateWidthMeters * 100);
-    this.plateHeightCmProperty.value = Math.round(plateHeightMeters * 100);
+    this.plateWidthCmProperty.value = roundSymmetric(plateWidthMeters * 100);
+    this.plateHeightCmProperty.value = roundSymmetric(plateHeightMeters * 100);
 
     this.removeAllChildren();
     this.create();

@@ -10,6 +10,7 @@
  * SceneryStackTemplate/SimScreenSummaryContent.ts.
  */
 import { DerivedProperty } from "scenerystack/axon";
+import { roundSymmetric } from "scenerystack/dot";
 import { StringUtils } from "scenerystack/phetcommon";
 import { ScreenSummaryContent } from "scenerystack/sim";
 import { StringManager } from "../../i18n/StringManager.js";
@@ -23,7 +24,7 @@ export class ChladniScreenSummaryContent extends ScreenSummaryContent {
       [chladni.currentDetailsStringProperty, model.frequencyProperty, model.actualParticleCountProperty],
       (template, frequency, particles) =>
         StringUtils.fillIn(template, {
-          frequency: Math.round(frequency),
+          frequency: roundSymmetric(frequency),
           particles: particles,
         }),
     );

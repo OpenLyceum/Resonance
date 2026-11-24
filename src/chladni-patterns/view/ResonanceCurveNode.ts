@@ -11,7 +11,7 @@
 
 import { DerivedProperty, Multilink } from "scenerystack/axon";
 import { ChartRectangle, ChartTransform, GridLineSet, LinePlot, TickLabelSet, TickMarkSet } from "scenerystack/bamboo";
-import { Bounds2, Range } from "scenerystack/dot";
+import { Bounds2, Range, roundSymmetric } from "scenerystack/dot";
 import { Shape } from "scenerystack/kite";
 import { Orientation } from "scenerystack/phet-core";
 import { StringUtils } from "scenerystack/phetcommon";
@@ -133,7 +133,7 @@ export class ResonanceCurveNode extends Node {
     this.xTickLabels = new TickLabelSet(this.chartTransform, Orientation.HORIZONTAL, gridSpacingX, {
       edge: "min",
       createLabel: (value: number) =>
-        new Text(Math.round(value).toString(), {
+        new Text(roundSymmetric(value).toString(), {
           font: ResonanceConstants.TICK_LABEL_FONT,
           fill: ResonanceColors.textProperty,
           maxWidth: 40, // Fixed max width to prevent layout shifts
@@ -213,9 +213,9 @@ export class ResonanceCurveNode extends Node {
 
         return StringUtils.fillIn(pattern, {
           material: materialName,
-          minFrequency: Math.round(windowRange.min),
-          maxFrequency: Math.round(windowRange.max),
-          frequency: Math.round(frequency),
+          minFrequency: roundSymmetric(windowRange.min),
+          maxFrequency: roundSymmetric(windowRange.max),
+          frequency: roundSymmetric(frequency),
           response: response,
         });
       },

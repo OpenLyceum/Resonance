@@ -280,6 +280,17 @@ describe("ResonanceModel", () => {
       expect(model.drivingPhaseProperty.value).toBeCloseTo(1.234, 10);
     });
 
+    it("rejects incomplete or sparse state before updating any properties", () => {
+      const original = model.getState();
+      const sparse = new Array<number>(original.length);
+      sparse[0] = 10;
+
+      expect(() => model.setState([10, 20])).toThrow(RangeError);
+      expect(() => model.setState(sparse)).toThrow(RangeError);
+      expect(() => model.getDerivatives(0, sparse)).toThrow(RangeError);
+      expect(model.getState()).toEqual(original);
+    });
+
     it("should return state vector in correct order", () => {
       model.positionProperty.value = 1.0;
       model.velocityProperty.value = 2.0;
@@ -304,7 +315,7 @@ describe("ResonanceModel", () => {
 
   describe("derivatives calculation", () => {
     it("should return velocity as first derivative (dx/dt = v)", () => {
-      const state = [0.1, 2.0, 0]; // position=0.1, velocity=2.0
+      const state = [0.1, 2.0, 0, 0, 0, 0, 0]; // position=0.1, velocity=2.0
       const derivatives = model.getDerivatives(0, state);
 
       expect(derivatives[0]).toBe(2.0); // dx/dt = v
@@ -315,7 +326,7 @@ describe("ResonanceModel", () => {
       model.gravityProperty.value = 0;
       model.drivingEnabledProperty.value = false;
 
-      const state = [0.1, 0, 0]; // position=0.1, velocity=0
+      const state = [0.1, 0, 0, 0, 0, 0, 0]; // position=0.1, velocity=0
       const derivatives = model.getDerivatives(0, state);
 
       // a = -k*x/m = -100*0.1/2.53 ≈ -3.953 m/s^2
@@ -329,7 +340,7 @@ describe("ResonanceModel", () => {
       model.drivingEnabledProperty.value = false;
       model.dampingProperty.value = 2.0;
 
-      const state = [0, 1.0, 0]; // position=0, velocity=1.0
+      const state = [0, 1.0, 0, 0, 0, 0, 0]; // position=0, velocity=1.0
       const derivatives = model.getDerivatives(0, state);
 
       // a = -b*v/m = -2.0*1.0/2.53 ≈ -0.791 m/s^2
@@ -343,7 +354,7 @@ describe("ResonanceModel", () => {
       model.drivingEnabledProperty.value = false;
       model.gravityProperty.value = 10;
 
-      const state = [0, 0, 0];
+      const state = [0, 0, 0, 0, 0, 0, 0];
       const derivatives = model.getDerivatives(0, state);
 
       // a = -g = -10 m/s^2 (gravity acts downward in negative Y direction)
@@ -360,7 +371,7 @@ describe("ResonanceModel", () => {
       model.drivingFrequencyProperty.value = 1.0;
 
       // At phase = pi/2, sin(phase) = 1
-      const state = [0, 0, Math.PI / 2];
+      const state = [0, 0, Math.PI / 2, 0, 0, 0, 0];
       const derivatives = model.getDerivatives(0, state);
 
       // F_drive = k * A * sin(phase) = 1 * 1 * 1 = 1 N
@@ -376,7 +387,7 @@ describe("ResonanceModel", () => {
       model.drivingEnabledProperty.value = false;
       model.drivingAmplitudeProperty.value = 1.0;
 
-      const state = [0, 0, Math.PI / 2];
+      const state = [0, 0, Math.PI / 2, 0, 0, 0, 0];
       const derivatives = model.getDerivatives(0, state);
 
       expect(derivatives[1]).toBe(0);
@@ -386,7 +397,7 @@ describe("ResonanceModel", () => {
       model.drivingEnabledProperty.value = true;
       model.drivingFrequencyProperty.value = 2.0; // 2 Hz
 
-      const state = [0, 0, 0];
+      const state = [0, 0, 0, 0, 0, 0, 0];
       const derivatives = model.getDerivatives(0, state);
 
       // dphase/dt = omega = 2*pi*f = 2*pi*2 ≈ 12.566 rad/s

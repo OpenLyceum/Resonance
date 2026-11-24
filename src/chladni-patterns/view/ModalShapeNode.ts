@@ -13,7 +13,7 @@
  */
 
 import { DerivedProperty, type Property } from "scenerystack/axon";
-import { Bounds2 } from "scenerystack/dot";
+import { Bounds2, roundSymmetric } from "scenerystack/dot";
 import { type EmptySelfOptions, optionize } from "scenerystack/phet-core";
 import { StringUtils } from "scenerystack/phetcommon";
 import { CanvasNode, type CanvasNodeOptions } from "scenerystack/scenery";
@@ -152,8 +152,8 @@ export class ModalShapeNode extends CanvasNode {
       // Blue to White (negative amplitude)
       const t = 1 + a; // 0 to 1 as a goes from -1 to 0
       return [
-        Math.round(t * 255), // R: 0 -> 255
-        Math.round(t * 255), // G: 0 -> 255
+        roundSymmetric(t * 255), // R: 0 -> 255
+        roundSymmetric(t * 255), // G: 0 -> 255
         255, // B: always 255
       ];
     } else {
@@ -161,8 +161,8 @@ export class ModalShapeNode extends CanvasNode {
       const t = 1 - a; // 1 to 0 as a goes from 0 to 1
       return [
         255, // R: always 255
-        Math.round(t * 255), // G: 255 -> 0
-        Math.round(t * 255), // B: 255 -> 0
+        roundSymmetric(t * 255), // G: 255 -> 0
+        roundSymmetric(t * 255), // B: 255 -> 0
       ];
     }
   }
@@ -190,7 +190,7 @@ export class ModalShapeNode extends CanvasNode {
     }
 
     const data = this.imageData.data;
-    const alpha = Math.round(MODAL_SHAPE_OPACITY * 255);
+    const alpha = roundSymmetric(MODAL_SHAPE_OPACITY * 255);
 
     // Render the modal shape
     for (let sy = 0; sy < sampleHeight; sy++) {
@@ -220,7 +220,10 @@ export class ModalShapeNode extends CanvasNode {
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = sampleWidth;
     tempCanvas.height = sampleHeight;
-    const tempCtx = tempCanvas.getContext("2d")!;
+    const tempCtx = tempCanvas.getContext("2d");
+    if (!tempCtx) {
+      return;
+    }
     tempCtx.putImageData(this.imageData, 0, 0);
 
     // Draw scaled up with smoothing for a smoother appearance

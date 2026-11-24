@@ -83,9 +83,9 @@ export class BaseOscillatorScreenView extends ScreenView {
   protected readonly measurementLinesNode: OscillatorMeasurementLinesNode;
   protected readonly controlPanel: OscillatorControlPanel;
   protected readonly driverNode: OscillatorDriverControlNode;
-  protected driverPlate!: Rectangle;
-  protected connectionRod!: Rectangle;
-  protected connectionRodMarker!: Line;
+  private readonly driverPlate: Rectangle;
+  private readonly connectionRod: Rectangle;
+  private readonly connectionRodMarker: Line;
   protected readonly traceDataModel: TraceDataModel;
   protected readonly traceNode: OscillatorTraceNode;
 
@@ -170,13 +170,15 @@ export class BaseOscillatorScreenView extends ScreenView {
 
     // ===== CONNECTION ROD (behind driver box) =====
     // Add the rod BEFORE the driver box so the box covers its bottom
-    this.createConnectionRod(simulationArea);
+    this.connectionRod = this.createConnectionRod(simulationArea);
 
     // Now add the driver node (on top of rod, covers rod bottom)
     simulationArea.addChild(this.driverNode);
 
     // ===== DRIVER PLATE & MARKER =====
-    this.createDriverPlateAndMarker(simulationArea);
+    const { driverPlate, connectionRodMarker } = this.createDriverPlateAndMarker(simulationArea);
+    this.driverPlate = driverPlate;
+    this.connectionRodMarker = connectionRodMarker;
 
     // ===== MEASUREMENT LINES =====
     // Must be created before resonators since measurement lines appear behind them
@@ -351,7 +353,7 @@ export class BaseOscillatorScreenView extends ScreenView {
    * Create the connection rod (added before driver box so box covers its bottom).
    * Uses model coordinates for positioning to stay connected with driver plate and box.
    */
-  protected createConnectionRod(simulationArea: Node): void {
+  private createConnectionRod(simulationArea: Node): Rectangle {
     const rodWidth = ResonanceConstants.CONNECTION_ROD_WIDTH;
 
     // Calculate rod position using model coordinates
@@ -366,21 +368,22 @@ export class BaseOscillatorScreenView extends ScreenView {
     const rodHeightView = rodBottomViewY - rodTopViewY;
 
     // Connection rod between control box and plate (rectangle with no corner radius)
-    this.connectionRod = new Rectangle(0, 0, rodWidth, rodHeightView, {
+    const connectionRod = new Rectangle(0, 0, rodWidth, rodHeightView, {
       fill: ResonanceColors.driverFillProperty,
       stroke: ResonanceColors.driverStrokeProperty,
       lineWidth: ResonanceConstants.DRIVER_BOX_LINE_WIDTH,
     });
-    this.connectionRod.centerX = this.driverNode.centerX;
-    this.connectionRod.top = rodTopViewY;
-    simulationArea.addChild(this.connectionRod);
+    connectionRod.centerX = this.driverNode.centerX;
+    connectionRod.top = rodTopViewY;
+    simulationArea.addChild(connectionRod);
+    return connectionRod;
   }
 
   /**
    * Create the driver plate and marker line (added after driver box).
    * Uses model coordinates for positioning to stay connected with the system.
    */
-  protected createDriverPlateAndMarker(simulationArea: Node): void {
+  private createDriverPlateAndMarker(simulationArea: Node): { driverPlate: Rectangle; connectionRodMarker: Line } {
     const driverPlateWidth = ResonanceConstants.DRIVER_BOX_WIDTH;
     const rodWidth = ResonanceConstants.CONNECTION_ROD_WIDTH;
 
@@ -392,24 +395,25 @@ export class BaseOscillatorScreenView extends ScreenView {
 
     // Marker line across the connection rod - moves with driver plate to show motion
     // Use a contrasting dark color so it's visible against the gray rod
-    this.connectionRodMarker = new Line(-rodWidth / 2, 0, rodWidth / 2, 0, {
+    const connectionRodMarker = new Line(-rodWidth / 2, 0, rodWidth / 2, 0, {
       stroke: ResonanceColors.connectionRodMarkerProperty,
       lineWidth: CONNECTION_ROD_MARKER_LINE_WIDTH,
       lineCap: "round",
     });
-    this.connectionRodMarker.x = this.driverNode.centerX;
-    simulationArea.addChild(this.connectionRodMarker);
+    connectionRodMarker.x = this.driverNode.centerX;
+    simulationArea.addChild(connectionRodMarker);
 
     // Driver plate - positioned using model coordinates
-    this.driverPlate = new Rectangle(0, 0, driverPlateWidth, plateHeightView, {
+    const driverPlate = new Rectangle(0, 0, driverPlateWidth, plateHeightView, {
       fill: ResonanceColors.driverFillProperty,
       stroke: ResonanceColors.driverStrokeProperty,
       lineWidth: ResonanceConstants.DRIVER_BOX_LINE_WIDTH,
       cornerRadius: ResonanceConstants.DRIVER_PLATE_CORNER_RADIUS,
     });
-    this.driverPlate.centerX = this.driverNode.centerX;
-    this.driverPlate.y = plateTopViewY;
-    simulationArea.addChild(this.driverPlate);
+    driverPlate.centerX = this.driverNode.centerX;
+    driverPlate.y = plateTopViewY;
+    simulationArea.addChild(driverPlate);
+    return { driverPlate, connectionRodMarker };
   }
 
   /**

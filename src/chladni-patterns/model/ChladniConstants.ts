@@ -188,15 +188,15 @@ export type GrainCountOption = {
 /**
  * Available grain count options
  */
-export const GRAIN_COUNT_OPTIONS: readonly GrainCountOption[] = [
+export const GRAIN_COUNT_OPTIONS = [
   { value: 1000, name: "1000" },
   { value: 5000, name: "5000" },
   { value: 10000, name: "10000" },
   { value: 25000, name: "25000" },
-] as const;
+] as const satisfies readonly GrainCountOption[];
 
 /**
  * Default grain count index in GRAIN_COUNT_OPTIONS array
  */
 const DEFAULT_GRAIN_COUNT_INDEX = 2; // 10,000
-export const DEFAULT_GRAIN_COUNT = GRAIN_COUNT_OPTIONS[DEFAULT_GRAIN_COUNT_INDEX]!;
+export const DEFAULT_GRAIN_COUNT = GRAIN_COUNT_OPTIONS[DEFAULT_GRAIN_COUNT_INDEX];

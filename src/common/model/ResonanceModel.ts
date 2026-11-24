@@ -27,6 +27,24 @@ import { ResonanceStrings } from "../../i18n/ResonanceStrings.js";
 import { BaseModel, type SubStepDataPoint } from "./BaseModel.js";
 import type { SolverType } from "./SolverType.js";
 
+type ResonanceState = [
+  position: number,
+  velocity: number,
+  drivingPhase: number,
+  driverEnergy: number,
+  thermalEnergy: number,
+  sumSquaredDisplacement: number,
+  sumSquaredVelocity: number,
+];
+
+function assertResonanceState(state: number[]): asserts state is ResonanceState {
+  // A generic solver array can have empty slots even when its length is correct.
+  const checkedSlots: readonly (number | undefined)[] = state;
+  if (checkedSlots.length !== 7 || checkedSlots.includes(undefined)) {
+    throw new RangeError("Expected seven oscillator state values");
+  }
+}
+
 export class ResonanceModel extends BaseModel {
   // State variables
   public readonly positionProperty: NumberProperty; // displacement from equilibrium (m, positive = upward)
@@ -895,7 +913,7 @@ export class ResonanceModel extends BaseModel {
   /**
    * Get the current state vector [position, velocity, drivingPhase, driverEnergy, thermalEnergy, sumX², sumV²]
    */
-  public override getState(): number[] {
+  public override getState(): ResonanceState {
     return [
       this.positionProperty.value,
       this.velocityProperty.value,
@@ -911,13 +929,16 @@ export class ResonanceModel extends BaseModel {
    * Set the state vector [position, velocity, drivingPhase, driverEnergy, thermalEnergy, sumX², sumV²]
    */
   public override setState(state: number[]): void {
-    this.positionProperty.value = state[0]!;
-    this.velocityProperty.value = state[1]!;
-    this.drivingPhaseProperty.value = state[2]!;
-    this.driverEnergyProperty.value = state[3]!;
-    this.thermalEnergyProperty.value = state[4]!;
-    this.sumSquaredDisplacementProperty.value = state[5]!;
-    this.sumSquaredVelocityProperty.value = state[6]!;
+    assertResonanceState(state);
+    const [position, velocity, drivingPhase, driverEnergy, thermalEnergy, sumSquaredDisplacement, sumSquaredVelocity] =
+      state;
+    this.positionProperty.value = position;
+    this.velocityProperty.value = velocity;
+    this.drivingPhaseProperty.value = drivingPhase;
+    this.driverEnergyProperty.value = driverEnergy;
+    this.thermalEnergyProperty.value = thermalEnergy;
+    this.sumSquaredDisplacementProperty.value = sumSquaredDisplacement;
+    this.sumSquaredVelocityProperty.value = sumSquaredVelocity;
   }
 
   /**
@@ -941,9 +962,8 @@ export class ResonanceModel extends BaseModel {
    * Using phase instead of time ensures smooth frequency changes
    */
   public override getDerivatives(_t: number, state: number[]): number[] {
-    const x = state[0]!; // position (displacement from equilibrium)
-    const v = state[1]!; // velocity
-    const phase = state[2]!; // driving phase
+    assertResonanceState(state);
+    const [x, v, phase] = state;
 
     const m = this.massProperty.value;
     const k = this.springConstantProperty.value;
@@ -1035,9 +1055,8 @@ export class ResonanceModel extends BaseModel {
       return;
     }
 
-    const position = state[0]!;
-    const velocity = state[1]!;
-    const phase = state[2]!;
+    assertResonanceState(state);
+    const [position, velocity, phase] = state;
 
     // Compute derived quantities from state
     const m = this.massProperty.value;
@@ -1107,9 +1126,7 @@ export type ResonancePreset = {
  * Get the localized name for a preset
  */
 export function getPresetName(preset: ResonancePreset): ReadOnlyProperty<string> {
-  const propertyName = `${preset.nameKey}StringProperty`;
-  const presetsMap = ResonanceStrings.presets as Record<string, ReadOnlyProperty<string>>;
-  return presetsMap[propertyName]!;
+  return ResonanceStrings.presets[`${preset.nameKey}StringProperty`];
 }
 
 /**

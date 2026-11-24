@@ -12,7 +12,7 @@
  * when needed for immediate results.
  */
 
-import { Range, Vector2 } from "scenerystack/dot";
+import { Range, roundSymmetric, Vector2 } from "scenerystack/dot";
 import {
   CURVE_SAMPLES_PER_HZ,
   FREQUENCY_MAX,
@@ -232,7 +232,7 @@ export class ResonanceCurveCalculator {
       const freq = freqMin + i * freqStep;
 
       // Map frequency to precomputed array index
-      const index = Math.round((freq - FREQUENCY_MIN) * CURVE_SAMPLES_PER_HZ);
+      const index = roundSymmetric((freq - FREQUENCY_MIN) * CURVE_SAMPLES_PER_HZ);
       const clampedIndex = Math.max(0, Math.min(TOTAL_CURVE_SAMPLES - 1, index));
 
       const strength = this.precomputedStrengths[clampedIndex]!;

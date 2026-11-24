@@ -89,7 +89,7 @@ export class ChladniScreenView extends ScreenView {
   private readonly rulerNode: ChladniRulerNode;
   private readonly gridNode: ChladniGridNode;
   private readonly colormapNode: DisplacementColormapNode;
-  private readonly modalShapeNode!: ModalShapeNode;
+  private readonly modalShapeNode: ModalShapeNode;
   private readonly sonification: ResonanceSonification;
 
   // Center position of the visualization in screen coordinates (fixed during resize)

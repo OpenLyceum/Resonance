@@ -12,7 +12,7 @@
  */
 
 import { PatternStringProperty, type Property, type TReadOnlyProperty } from "scenerystack/axon";
-import { Bounds2 } from "scenerystack/dot";
+import { Bounds2, roundSymmetric } from "scenerystack/dot";
 import { optionize } from "scenerystack/phet-core";
 import type { ModelViewTransform2 } from "scenerystack/phetcommon";
 import { Node, type NodeOptions, Rectangle } from "scenerystack/scenery";
@@ -173,7 +173,7 @@ export class ChladniVisualizationNode extends Node {
         material: this.materialNameProperty,
         frequency: model.frequencyProperty,
       },
-      { maps: { frequency: (frequency: number) => Math.round(frequency) } },
+      { maps: { frequency: (frequency: number) => roundSymmetric(frequency) } },
     );
     this.descriptionContent = this.descriptionProperty;
   }
